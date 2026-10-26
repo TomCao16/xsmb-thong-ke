@@ -153,31 +153,9 @@
   </section>
 </main>
 
-<script src="./algorithm.js"></script>
+
 <script>
   const $ = id => document.getElementById(id);
-
-  function addCell(row, value) {
-    const cell = document.createElement("td");
-    cell.textContent = String(value ?? "");
-    row.appendChild(cell);
-  }
-
-  function addRow(tableBody, values) {
-    const row = document.createElement("tr");
-    values.forEach(value => addCell(row, value));
-    tableBody.appendChild(row);
-  }
-
-  function positionDescription(p) {
-    return [
-      `${p.cellA} (${p.valueA})`,
-      `digit[${p.digitIndex}]`,
-      `${p.cellB} (${p.valueB})`,
-      `→ ${p.pair}`,
-      p.direction
-    ].join(" | ");
-  }
 
   function showError(error) {
     $("status").className = "status error";
@@ -187,60 +165,46 @@
 
   $("runButton").addEventListener("click", () => {
     try {
-      if (typeof analyze !== "function") {
+      const algorithm = window.XSMBAlgorithm;
+
+      if (!algorithm || typeof algorithm.analyze !== "function") {
         throw new Error(
-          "Không tìm thấy hàm analyze(). Kiểm tra file algorithm.js."
+          "Không tải được algorithm.js hoặc không tìm thấy hàm analyze()."
         );
       }
 
-      const report = analyze();
+      const source = algorithm.TEST_DATA["2026-10-23"];
+      const target = algorithm.TEST_DATA["2026-10-22"];
 
-      $("sourceBody").replaceChildren();
-      $("targetBody").replaceChildren();
+      if (!source || !target) {
+        throw new Error("Không tìm thấy dữ liệu ngày nguồn hoặc ngày áp dụng.");
+      }
 
-      report.sourcePatterns.forEach(pattern => {
-        const details = pattern.positions
-          .map(positionDescription)
-          .join("\n");
-
-        addRow($("sourceBody"), [
-          `${pattern.pair}/${pattern.reversePair}`,
-          pattern.positionCount,
-          details
-        ]);
-      });
-
-      report.appliedPatterns.forEach(pattern => {
-        pattern.results.forEach(result => {
-          addRow($("targetBody"), [
-            pattern.sourcePair,
-            result.applied
-              ? `${result.pair}/${result.reversePair}`
-              : "Không tạo được",
-            result.applied
-              ? positionDescription(result)
-              : result.error,
-            result.applied ? "OK" : "LỖI"
-          ]);
-        });
-      });
+      const report = algorithm.analyze(source, target);
 
       $("summaryContent").textContent =
-        `Phiên bản: ${report.version} | ` +
-        `Mẫu đủ điều kiện: ${report.sourcePatternCount} | ` +
-        `Ngày nguồn: ${report.sourceDate} | ` +
-        `Ngày áp dụng: ${report.targetDate}`;
+        `Phiên bản: ${report.version}\n` +
+        `Ngày nguồn: ${report.sourceDate}\n` +
+        `Ngày áp dụng: ${report.targetDate}\n` +
+        `Số lượt tạo cặp: ${report.sourceCreationCount}\n` +
+        `Số mẫu đủ điều kiện: ${report.qualifiedPatternCount}\n` +
+        `Ghi chú: ${report.note}`;
 
-      $("jsonOutput").textContent =
-        JSON.stringify(report, null, 2);
+      $("jsonOutput").textContent = JSON.stringify(report, null, 2);
 
-      ["summary", "sourcePanel", "targetPanel", "jsonPanel"]
-        .forEach(id => $(id).classList.remove("hidden"));
+      for (const id of [
+        "summary",
+        "jsonPanel"
+      ]) {
+        $(id).classList.remove("hidden");
+      }
+
+      $("sourcePanel").classList.add("hidden");
+      $("targetPanel").classList.add("hidden");
 
       $("status").className = "status success";
       $("status").textContent =
-        "Chạy xong. Đây là kết quả trên dữ liệu thử nghiệm; " +
-        "chưa xác nhận độ chính xác của sơ đồ vị trí.";
+        "Đã chạy thuật toán. Dữ liệu vẫn là dữ liệu thử nghiệm, chưa xác minh với nguồn thực tế.";
     } catch (error) {
       showError(error);
       console.error(error);
@@ -250,8 +214,8 @@
   $("copyButton").addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText($("jsonOutput").textContent);
-      $("status").textContent = "Đã sao chép JSON.";
       $("status").className = "status success";
+      $("status").textContent = "Đã sao chép JSON.";
     } catch (error) {
       showError(new Error(
         "Không thể sao chép tự động. Hãy chọn và sao chép JSON thủ công."
