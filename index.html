@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>XSMB Thống Kê - Kiểm Thử Thuật Toán</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f3f5f8;
+      color: #172033;
+      font-family: Arial, sans-serif;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    h1 { font-size: 25px; }
+    h2 { font-size: 19px; }
+
+    .panel {
+      background: white;
+      border: 1px solid #dce2eb;
+      border-radius: 10px;
+      padding: 18px;
+      margin: 16px 0;
+    }
+
+    button {
+      background: #1457c5;
+      color: white;
+      border: 0;
+      border-radius: 6px;
+      padding: 12px 18px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover { background: #0d4299; }
+
+    .muted { color: #667085; font-size: 14px; }
+
+    .status {
+      padding: 12px;
+      border-radius: 6px;
+      background: #eef4ff;
+      margin-top: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .error { background: #fff0f0; color: #a40000; }
+    .success { background: #eaf8ef; color: #176534; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid #dce2eb;
+      padding: 9px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { background: #f0f3f8; }
+
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+
+<body>
+<main>
+  <h1>Thống kê xổ số miền Bắc</h1>
+  <p class="muted">
+    Dự án độc lập — kiểm thử thuật toán theo vị trí.
+  </p>
+
+  <section class="panel">
+    <h2>Thông tin kiểm thử</h2>
+    <p>Ngày tìm mẫu: <strong>23/10/2026</strong></p>
+    <p>Ngày áp dụng mẫu: <strong>22/10/2026</strong></p>
+    <p>Điều kiện: ít nhất 4 vị trí tạo thành.</p>
+    <p class="muted">
+      Dữ liệu hiện tại là dữ liệu thử nghiệm trong algorithm.js,
+      chưa xác minh tự động với website nguồn.
+    </p>
+
+    <button id="runButton">CHẠY KIỂM THỬ</button>
+    <div id="status" class="status">
+      Sẵn sàng. Nhấn “CHẠY KIỂM THỬ”.
+    </div>
+  </section>
+
+  <section id="summary" class="panel hidden">
+    <h2>Kết quả tổng quan</h2>
+    <div id="summaryContent"></div>
+  </section>
+
+  <section id="sourcePanel" class="panel hidden">
+    <h2>A. Mẫu tìm được ngày 23/10</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cặp</th>
+            <th>Số vị trí</th>
+            <th>Chi tiết vị trí</th>
+          </tr>
+        </thead>
+        <tbody id="sourceBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="targetPanel" class="panel hidden">
+    <h2>B. Áp dụng tọa độ sang ngày 22/10</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cặp mẫu nguồn</th>
+            <th>Cặp tạo thành</th>
+            <th>Tọa độ và chữ số</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody id="targetBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="jsonPanel" class="panel hidden">
+    <h2>Dữ liệu kết quả JSON</h2>
+    <button id="copyButton">SAO CHÉP JSON</button>
+    <pre id="jsonOutput"></pre>
+  </section>
+</main>
+
+<script src="./algorithm.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+
+  function addCell(row, value) {
+    const cell = document.createElement("td");
+    cell.textContent = String(value ?? "");
+    row.appendChild(cell);
+  }
+
+  function addRow(tableBody, values) {
+    const row = document.createElement("tr");
+    values.forEach(value => addCell(row, value));
+    tableBody.appendChild(row);
+  }
+
+  function positionDescription(p) {
+    return [
+      `${p.cellA} (${p.valueA})`,
+      `digit[${p.digitIndex}]`,
+      `${p.cellB} (${p.valueB})`,
+      `→ ${p.pair}`,
+      p.direction
+    ].join(" | ");
+  }
+
+  function showError(error) {
+    $("status").className = "status error";
+    $("status").textContent =
+      "LỖI: " + (error?.message || String(error));
+  }
+
+  $("runButton").addEventListener("click", () => {
+    try {
+      if (typeof analyze !== "function") {
+        throw new Error(
+          "Không tìm thấy hàm analyze(). Kiểm tra file algorithm.js."
+        );
+      }
+
+      const report = analyze();
+
+      $("sourceBody").replaceChildren();
+      $("targetBody").replaceChildren();
+
+      report.sourcePatterns.forEach(pattern => {
+        const details = pattern.positions
+          .map(positionDescription)
+          .join("\n");
+
+        addRow($("sourceBody"), [
+          `${pattern.pair}/${pattern.reversePair}`,
+          pattern.positionCount,
+          details
+        ]);
+      });
+
+      report.appliedPatterns.forEach(pattern => {
+        pattern.results.forEach(result => {
+          addRow($("targetBody"), [
+            pattern.sourcePair,
+            result.applied
+              ? `${result.pair}/${result.reversePair}`
+              : "Không tạo được",
+            result.applied
+              ? positionDescription(result)
+              : result.error,
+            result.applied ? "OK" : "LỖI"
+          ]);
+        });
+      });
+
+      $("summaryContent").textContent =
+        `Phiên bản: ${report.version} | ` +
+        `Mẫu đủ điều kiện: ${report.sourcePatternCount} | ` +
+        `Ngày nguồn: ${report.sourceDate} | ` +
+        `Ngày áp dụng: ${report.targetDate}`;
+
+      $("jsonOutput").textContent =
+        JSON.stringify(report, null, 2);
+
+      ["summary", "sourcePanel", "targetPanel", "jsonPanel"]
+        .forEach(id => $(id).classList.remove("hidden"));
+
+      $("status").className = "status success";
+      $("status").textContent =
+        "Chạy xong. Đây là kết quả trên dữ liệu thử nghiệm; " +
+        "chưa xác nhận độ chính xác của sơ đồ vị trí.";
+    } catch (error) {
+      showError(error);
+      console.error(error);
+    }
+  });
+
+  $("copyButton").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText($("jsonOutput").textContent);
+      $("status").textContent = "Đã sao chép JSON.";
+      $("status").className = "status success";
+    } catch (error) {
+      showError(new Error(
+        "Không thể sao chép tự động. Hãy chọn và sao chép JSON thủ công."
+      ));
+    }
+  });
+</script>
+</body>
+</html>
