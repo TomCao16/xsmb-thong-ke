@@ -3,11 +3,24 @@
 
 /*
  * XSMB THONG KE
- * Version 1.0.0
+ * Algorithm version 2.0.0
  *
- * Test harness for the position-based algorithm.
- * No external libraries required.
+ * Quy tac:
+ * 1. DB + G1: hai hang, ghep cac vi tri ke nhau ngang/doc/cheo.
+ * 2. G3: 6 so, luoi 2 x 3, ghep ngang/doc/cheo trong G3.
+ * 3. G5: 6 so, luoi 2 x 3, ghep ngang/doc/cheo trong G5.
+ * 4. G5 hang duoi ghep G6 theo cot:
+ *    G5 lan 4 <-> G6 lan 1
+ *    G5 lan 5 <-> G6 lan 2
+ *    G5 lan 6 <-> G6 lan 3
+ * 5. G2/G4: chi ghep chu so lien ke trong tung so.
+ * 6. Nguong toi thieu: 4 vi tri.
+ *
+ * Luu y:
+ * TEST_DATA la du lieu mau, chua tu dong doc website.
  */
+
+const VERSION = "2.0.0";
 
 const CONFIG = {
   sourceDate: "2026-10-23",
@@ -15,250 +28,472 @@ const CONFIG = {
   minPositions: 4
 };
 
-// Temporary test fixtures.
-// Replace these with verified source data before production use.
+/*
+ * Du lieu kiem thu.
+ * Hay thay cac gia tri nay bang du lieu da xac minh
+ * tu ketqua16.net truoc khi dung ket qua thuc te.
+ */
 const TEST_DATA = {
-  "2026-10-23": [
-    ["97067"],
-    ["19688"],
-    ["87440", "68563"],
-    ["98237", "96450", "34516"],
-    ["92414", "41011", "49196"],
-    ["0840", "7322", "9978", "7001"],
-    ["0664", "1595", "8514"],
-    ["6342", "2372", "0724"],
-    ["953", "200", "521"],
-    ["70", "16", "53", "03"]
-  ],
-  "2026-10-22": [
-    ["25814"],
-    ["12613"],
-    ["02537", "15905"],
-    ["19974", "68554", "91512"],
-    ["60166", "90697", "22343"],
-    ["9631", "5856", "6546", "2861"],
-    ["2064", "8820", "1891"],
-    ["7956", "7998", "8415"],
-    ["759", "199", "732"],
-    ["75", "17", "82", "21"]
-  ]
+  "2026-10-23": {
+    DB: ["97067"],
+    G1: ["19688"],
+    G2: ["87440", "68563"],
+    G3: [
+      "98237", "96450", "34516",
+      "92414", "41011", "49196"
+    ],
+    G4: ["0840", "7322", "9978", "7001"],
+    G5: [
+      "0664", "1595", "8514",
+      "6342", "2372", "0724"
+    ],
+    G6: ["953", "200", "521"],
+    G7: ["70", "16", "53", "03"]
+  },
+
+  "2026-10-22": {
+    DB: ["25814"],
+    G1: ["12613"],
+    G2: ["02537", "15905"],
+    G3: [
+      "19974", "68554", "91512",
+      "60166", "90697", "22343"
+    ],
+    G4: ["9631", "5856", "6546", "2861"],
+    G5: [
+      "2064", "8820", "1891",
+      "7956", "7998", "8415"
+    ],
+    G6: ["759", "199", "732"],
+    G7: ["75", "17", "82", "21"]
+  }
 };
 
-const ROW_NAMES = [
-  "DB", "G1", "G2", "G3", "G3",
-  "G4", "G5", "G5", "G6", "G7"
-];
+/* ---------- Chuan hoa du lieu ---------- */
 
-function buildCells(rows) {
-  if (!Array.isArray(rows) || rows.length !== ROW_NAMES.length) {
-    throw new Error("Invalid table row count.");
-  }
-
-  const cells = [];
-
-  rows.forEach((row, r) => {
-    row.forEach((value, c) => {
-      value = String(value);
-
-      if (!/^\d+$/.test(value)) {
-        throw new Error(`Invalid number at row ${r}, col ${c}`);
-      }
-
-      cells.push({
-        id: `${ROW_NAMES[r]}_R${r}_C${c}`,
-        row: r,
-        col: c,
-        width: row.length,
-        prize: ROW_NAMES[r],
-        value
-      });
-    });
-  });
-
-  return cells;
+function normalizeNumber(value) {
+  if (value === null || value === undefined) return "";
+  return String(value).trim().replace(/\s+/g, "");
 }
 
-function areAdjacent(a, b) {
-  const dr = Math.abs(a.row - b.row);
+function getNumbers(day, prize) {
+  const values = day && day[prize];
+  if (!Array.isArray(values)) return [];
+  return values.map(normalizeNumber).filter(Boolean);
+}
 
-  if (dr > 1) return false;
+function makeCell(prize, index, value, row, col) {
+  return {
+    id: `${prize}_${index}`,
+    prize,
+    index,
+    value,
+    row,
+    col
+  };
+}
 
-  if (dr === 0) {
-    return Math.abs(a.col - b.col) === 1;
+function makeGrid(prize, numbers, columns) {
+  return numbers.map((value, index) =>
+    makeCell(
+      prize,
+      index,
+      value,
+      Math.floor(index / columns),
+      index % columns
+    )
+  );
+}
+
+/*
+ * Lay cac chu so cua mot o.
+ * digitIndex = 0 la chu so dau tien.
+ */
+function getDigit(cell, digitIndex) {
+  if (!cell) return null;
+  if (!Number.isInteger(digitIndex)) return null;
+  if (digitIndex < 0 || digitIndex >= cell.value.length) return null;
+  return cell.value[digitIndex];
+}
+
+function getCell(cells, id) {
+  return cells.find(cell => cell.id === id) || null;
+}
+
+/* ---------- Xac dinh cac vung duoc phep ghep ---------- */
+
+function buildRegions(day) {
+  const db = getNumbers(day, "DB");
+  const g1 = getNumbers(day, "G1");
+  const g2 = getNumbers(day, "G2");
+  const g3 = getNumbers(day, "G3");
+  const g4 = getNumbers(day, "G4");
+  const g5 = getNumbers(day, "G5");
+  const g6 = getNumbers(day, "G6");
+
+  const regions = [];
+
+  /*
+   * DB/G1: hai hang, moi hang la mot o so.
+   * Khong tu y ghep cac chu so khong ke nhau.
+   */
+  if (db.length >= 1 && g1.length >= 1) {
+    regions.push({
+      id: "DB_G1",
+      type: "grid",
+      cells: [
+        makeCell("DB", 0, db[0], 0, 0),
+        makeCell("G1", 0, g1[0], 1, 0)
+      ],
+      columns: 1
+    });
   }
 
-  // Normalize horizontal cell centers across rows
-  // that have different numbers of cells.
-  const ax = (a.col + 0.5) / a.width;
-  const bx = (b.col + 0.5) / b.width;
+  /*
+   * G3: thu tu 1,2,3 tren hang tren;
+   * 4,5,6 tren hang duoi.
+   */
+  if (g3.length >= 6) {
+    regions.push({
+      id: "G3",
+      type: "grid",
+      cells: makeGrid("G3", g3.slice(0, 6), 3),
+      columns: 3
+    });
+  }
 
-  return Math.abs(ax - bx) <=
-    0.5 / a.width + 0.5 / b.width + 1e-9;
+  /*
+   * G5: hai hang, moi hang 3 so.
+   */
+  if (g5.length >= 6) {
+    regions.push({
+      id: "G5",
+      type: "grid",
+      cells: makeGrid("G5", g5.slice(0, 6), 3),
+      columns: 3
+    });
+  }
+
+  /*
+   * G2 va G4: ghep chu so lien ke ben trong tung so.
+   */
+  for (const prize of ["G2", "G4"]) {
+    const numbers = prize === "G2" ? g2 : g4;
+    numbers.forEach((value, index) => {
+      regions.push({
+        id: `${prize}_ADJ_${index}`,
+        type: "withinNumber",
+        cells: [
+          makeCell(prize, index, value, 0, 0)
+        ]
+      });
+    });
+  }
+
+  /*
+   * G5 hang duoi + G6.
+   * Moi cap o tuong ung duoc ghep cac chu so
+   * cung chi so, giua hai so.
+   */
+  if (g5.length >= 6 && g6.length >= 3) {
+    for (let col = 0; col < 3; col++) {
+      regions.push({
+        id: `G5_G6_COL_${col}`,
+        type: "pairedCells",
+        cells: [
+          makeCell("G5", col + 3, g5[col + 3], 0, col),
+          makeCell("G6", col, g6[col], 1, col)
+        ]
+      });
+    }
+  }
+
+  return regions;
+}
+
+/* ---------- Ghép cac vi tri trong mot vung ---------- */
+
+function isAdjacent(a, b) {
+  if (!a || !b) return false;
+
+  const dr = Math.abs(a.row - b.row);
+  const dc = Math.abs(a.col - b.col);
+
+  return dr <= 1 && dc <= 1 && (dr + dc > 0);
 }
 
 function directionOf(a, b) {
-  if (a.row === b.row) return "horizontal";
+  const dr = b.row - a.row;
+  const dc = b.col - a.col;
 
-  const ax = (a.col + 0.5) / a.width;
-  const bx = (b.col + 0.5) / b.width;
+  if (dr === 0 && dc !== 0) return "horizontal";
+  if (dc === 0 && dr !== 0) return "vertical";
+  if (Math.abs(dr) === Math.abs(dc)) {
+    return dr * dc > 0 ? "diagonal-right" : "diagonal-left";
+  }
 
-  if (Math.abs(ax - bx) < 1e-9) return "vertical";
-
-  return bx < ax ? "diagonal-left" : "diagonal-right";
+  return "adjacent";
 }
 
-function canonicalPair(pair) {
-  const reverse = pair[1] + pair[0];
-  return pair <= reverse ? pair : reverse;
+function makePosition(cell, digitIndex) {
+  return {
+    cellId: cell.id,
+    prize: cell.prize,
+    numberIndex: cell.index,
+    number: cell.value,
+    row: cell.row,
+    col: cell.col,
+    digitIndex
+  };
 }
 
-function findPatterns(rows, minPositions = 4) {
-  const cells = buildCells(rows);
-  const patterns = new Map();
+function makeCreation(region, a, ai, b, bi) {
+  const da = getDigit(a, ai);
+  const db = getDigit(b, bi);
+
+  if (da === null || db === null) return null;
+
+  return {
+    regionId: region.id,
+    pair: da + db,
+    left: makePosition(a, ai),
+    right: makePosition(b, bi),
+    direction: directionOf(a, b)
+  };
+}
+
+/*
+ * Ghép cac o ke nhau trong luoi:
+ * - Moi cap o chi xet mot lan.
+ * - Moi vi tri chu so trong hai o deu duoc xet.
+ * - Khong noi sang vung khac.
+ */
+function createGridPairs(region) {
+  const results = [];
+  const cells = region.cells;
 
   for (let i = 0; i < cells.length; i++) {
     for (let j = i + 1; j < cells.length; j++) {
       const a = cells[i];
       const b = cells[j];
 
-      if (!areAdjacent(a, b)) continue;
+      if (!isAdjacent(a, b)) continue;
 
-      const length = Math.min(a.value.length, b.value.length);
-
-      for (let d = 0; d < length; d++) {
-        const pair = a.value[d] + b.value[d];
-        const key = canonicalPair(pair);
-
-        if (!patterns.has(key)) {
-          patterns.set(key, new Map());
+      for (let ai = 0; ai < a.value.length; ai++) {
+        for (let bi = 0; bi < b.value.length; bi++) {
+          const item = makeCreation(region, a, ai, b, bi);
+          if (item) results.push(item);
         }
-
-        const position = {
-          cellA: a.id,
-          cellB: b.id,
-          prizeA: a.prize,
-          prizeB: b.prize,
-          valueA: a.value,
-          valueB: b.value,
-          digitIndex: d,
-          direction: directionOf(a, b),
-          pair
-        };
-
-        const positionKey =
-          `${position.cellA}|${position.cellB}|${d}`;
-
-        patterns.get(key).set(positionKey, position);
       }
     }
   }
 
-  return [...patterns.entries()]
-    .map(([pair, positions]) => ({
-      pair,
-      reversePair: pair[1] + pair[0],
-      positions: [...positions.values()],
-      positionCount: positions.size
-    }))
-    .filter(item => item.positionCount >= minPositions)
-    .sort((a, b) =>
-      b.positionCount - a.positionCount ||
-      a.pair.localeCompare(b.pair)
-    );
+  return results;
 }
 
-function applyPatterns(patterns, targetRows) {
-  const cells = buildCells(targetRows);
-  const cellMap = new Map(cells.map(cell => [cell.id, cell]));
+/*
+ * DB/G1 va G5/G6:
+ * chi ghep cac o trong cung cap.
+ * Moi chu so cua o tren ghep voi moi chu so o duoi
+ * neu hai o co quan he ke nhau trong vung.
+ */
+function createPairedCellPairs(region) {
+  const results = [];
+  const [a, b] = region.cells;
 
-  return patterns.map(pattern => {
-    const results = [];
+  if (!a || !b || !isAdjacent(a, b)) return results;
 
-    for (const p of pattern.positions) {
-      const a = cellMap.get(p.cellA);
-      const b = cellMap.get(p.cellB);
+  for (let ai = 0; ai < a.value.length; ai++) {
+    for (let bi = 0; bi < b.value.length; bi++) {
+      const item = makeCreation(region, a, ai, b, bi);
+      if (item) results.push(item);
+    }
+  }
 
-      if (!a || !b) {
-        results.push({
-          ...p,
-          applied: false,
-          error: "Coordinate missing on target day"
-        });
-        continue;
-      }
+  return results;
+}
 
-      if (
-        p.digitIndex >= a.value.length ||
-        p.digitIndex >= b.value.length
-      ) {
-        results.push({
-          ...p,
-          applied: false,
-          error: "Digit index unavailable"
-        });
-        continue;
-      }
+/*
+ * G2/G4: cac chu so lien ke trong cung mot so.
+ * Vi du 28540 -> 28, 85, 54, 40.
+ */
+function createWithinNumberPairs(region) {
+  const results = [];
+  const cell = region.cells[0];
 
-      const pair = a.value[p.digitIndex] + b.value[p.digitIndex];
+  if (!cell) return results;
 
-      results.push({
-        sourcePair: pattern.pair,
-        pair,
-        reversePair: pair[1] + pair[0],
-        cellA: p.cellA,
-        cellB: p.cellB,
-        digitIndex: p.digitIndex,
-        direction: p.direction,
-        valueA: a.value,
-        valueB: b.value,
-        applied: true
+  for (let i = 0; i < cell.value.length - 1; i++) {
+    results.push({
+      regionId: region.id,
+      pair: cell.value[i] + cell.value[i + 1],
+      left: makePosition(cell, i),
+      right: makePosition(cell, i + 1),
+      direction: "consecutive-digits"
+    });
+  }
+
+  return results;
+}
+
+function createAllPairs(day) {
+  const creations = [];
+
+  for (const region of buildRegions(day)) {
+    let items = [];
+
+    if (region.type === "grid") {
+      items = createGridPairs(region);
+    } else if (region.type === "pairedCells") {
+      items = createPairedCellPairs(region);
+    } else if (region.type === "withinNumber") {
+      items = createWithinNumberPairs(region);
+    }
+
+    creations.push(...items);
+  }
+
+  return creations;
+}
+
+/* ---------- Gom cap dao chieu va dem vi tri ---------- */
+
+function canonicalPair(pair) {
+  if (typeof pair !== "string" || pair.length !== 2) return pair;
+  const reverse = pair[1] + pair[0];
+  return pair <= reverse ? pair : reverse;
+}
+
+function groupCreations(creations) {
+  const groups = new Map();
+
+  for (const creation of creations) {
+    const key = canonicalPair(creation.pair);
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        pair: key === creation.pair ? key : `${key[1]}${key[0]}/${key}`,
+        canonical: key,
+        count: 0,
+        positions: []
       });
     }
 
-    return {
-      sourcePair: pattern.pair,
-      sourcePositionCount: pattern.positionCount,
-      results
-    };
-  });
-}
-
-function analyze(data = TEST_DATA, config = CONFIG) {
-  const sourceRows = data[config.sourceDate];
-  const targetRows = data[config.targetDate];
-
-  if (!sourceRows || !targetRows) {
-    throw new Error("Source date or target date is missing.");
+    const group = groups.get(key);
+    group.count += 1;
+    group.positions.push(creation);
   }
 
-  const sourcePatterns = findPatterns(
-    sourceRows,
-    config.minPositions
-  );
+  return [...groups.values()]
+    .filter(group => group.count >= CONFIG.minPositions)
+    .sort((a, b) =>
+      b.count - a.count || a.canonical.localeCompare(b.canonical)
+    );
+}
 
-  const appliedPatterns = applyPatterns(
-    sourcePatterns,
-    targetRows
-  );
+/* ---------- Ap dung dung toa do sang ngay truoc ---------- */
+
+function applyOneCreation(creation, targetDay) {
+  const source = creation;
+  const regions = buildRegions(targetDay);
+
+  const region = regions.find(r => r.id === source.regionId);
+  if (!region) {
+    return { ...source, appliedPair: null, status: "MISSING_REGION" };
+  }
+
+  const leftCell = getCell(region.cells, source.left.cellId);
+  const rightCell = getCell(region.cells, source.right.cellId);
+
+  if (!leftCell || !rightCell) {
+    return { ...source, appliedPair: null, status: "MISSING_CELL" };
+  }
+
+  const leftDigit = getDigit(leftCell, source.left.digitIndex);
+  const rightDigit = getDigit(rightCell, source.right.digitIndex);
+
+  if (leftDigit === null || rightDigit === null) {
+    return { ...source, appliedPair: null, status: "MISSING_DIGIT" };
+  }
 
   return {
-    version: "1.0.0",
-    sourceDate: config.sourceDate,
-    targetDate: config.targetDate,
-    minPositions: config.minPositions,
-    sourcePatternCount: sourcePatterns.length,
-    sourcePatterns,
-    appliedPatterns
+    ...source,
+    appliedPair: leftDigit + rightDigit,
+    appliedLeft: makePosition(leftCell, source.left.digitIndex),
+    appliedRight: makePosition(rightCell, source.right.digitIndex),
+    status: "OK"
   };
 }
 
-// Export for use in a browser or Node.js.
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
+function applyPatterns(patterns, targetDay) {
+  const applied = [];
+
+  for (const group of patterns) {
+    for (const creation of group.positions) {
+      applied.push({
+        sourceCanonical: group.canonical,
+        sourcePair: creation.pair,
+        ...applyOneCreation(creation, targetDay)
+      });
+    }
+  }
+
+  return applied;
+}
+
+/* ---------- Ham chinh de index.html goi ---------- */
+
+function analyze(sourceDay, targetDay) {
+  const source = sourceDay || TEST_DATA[CONFIG.sourceDate];
+  const target = targetDay || TEST_DATA[CONFIG.targetDate];
+
+  if (!source || !target) {
+    throw new Error("Khong tim thay du lieu ngay nguon hoac ngay ap dung.");
+  }
+
+  const allSourceCreations = createAllPairs(source);
+  const sourceGroups = groupCreations(allSourceCreations);
+  const applied = applyPatterns(sourceGroups, target);
+
+  return {
+    version: VERSION,
+    sourceDate: CONFIG.sourceDate,
+    targetDate: CONFIG.targetDate,
+    minPositions: CONFIG.minPositions,
+    sourceCreationCount: allSourceCreations.length,
+    qualifiedPatternCount: sourceGroups.length,
+    patterns: sourceGroups,
+    applied,
+    note:
+      "Du lieu hien tai la du lieu thu nghiem. Chua tu dong doc website va chua doi chieu ket qua thuc te."
+  };
+}
+
+/* ---------- Ho tro chay trong trinh duyet va Node.js ---------- */
+
+if (typeof window !== "undefined") {
+  window.XSMBAlgorithm = {
+    VERSION,
     CONFIG,
     TEST_DATA,
-    buildCells,
-    findPatterns,
+    buildRegions,
+    createAllPairs,
+    groupCreations,
+    applyPatterns,
+    analyze
+  };
+
+  window.analyze = analyze;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    VERSION,
+    CONFIG,
+    TEST_DATA,
+    buildRegions,
+    createAllPairs,
+    groupCreations,
     applyPatterns,
     analyze
   };
