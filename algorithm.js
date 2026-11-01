@@ -3,498 +3,1000 @@
 
 /*
  * XSMB THONG KE
- * Algorithm version 2.0.0
+ * Algorithm version 3.0.0
  *
- * Quy tac:
- * 1. DB + G1: hai hang, ghep cac vi tri ke nhau ngang/doc/cheo.
- * 2. G3: 6 so, luoi 2 x 3, ghep ngang/doc/cheo trong G3.
- * 3. G5: 6 so, luoi 2 x 3, ghep ngang/doc/cheo trong G5.
- * 4. G5 hang duoi ghep G6 theo cot:
- *    G5 lan 4 <-> G6 lan 1
- *    G5 lan 5 <-> G6 lan 2
- *    G5 lan 6 <-> G6 lan 3
- * 5. G2/G4: chi ghep chu so lien ke trong tung so.
- * 6. Nguong toi thieu: 4 vi tri.
+ * QUY TRINH:
+ * 1. Ngay N: Tao mau trong cac vung do va den da khai bao.
+ * 2. Loc cap co toi thieu 5 luot tao thanh.
+ * 3. Ngay N-1: Ap dung dung cac toa do mau cua ngay N.
+ * 4. Ngay N: Lay duoi 2 so DB -> G7 de doi chieu.
+ * 5. Chi giu cac cap tao tren N-1 co mat trong ket qua ngay N.
  *
- * Luu y:
- * TEST_DATA la du lieu mau, chua tu dong doc website.
+ * VUNG DO:
+ * Ghep moi hai vi tri chu so khac nhau trong cung vung.
+ *
+ * VUNG DEN:
+ * Chi ghep hai chu so lien ke ben trong tung so.
+ *
+ * KHONG GHEP:
+ * Khong ghep giua hai vung khac nhau.
+ * Khong tu dong mo rong vung.
  */
 
-const VERSION = "2.0.0";
+(function (root) {
+  "use strict";
 
-const CONFIG = {
-  sourceDate: "2026-10-23",
-  targetDate: "2026-10-22",
-  minPositions: 4
-};
+  const VERSION = "3.0.0";
 
-/*
- * Du lieu kiem thu.
- * Hay thay cac gia tri nay bang du lieu da xac minh
- * tu ketqua16.net truoc khi dung ket qua thuc te.
- */
-const TEST_DATA = {
-  "2026-10-23": {
-    DB: ["97067"],
-    G1: ["19688"],
-    G2: ["87440", "68563"],
-    G3: [
-      "98237", "96450", "34516",
-      "92414", "41011", "49196"
-    ],
-    G4: ["0840", "7322", "9978", "7001"],
-    G5: [
-      "0664", "1595", "8514",
-      "6342", "2372", "0724"
-    ],
-    G6: ["953", "200", "521"],
-    G7: ["70", "16", "53", "03"]
-  },
-
-  "2026-10-22": {
-    DB: ["25814"],
-    G1: ["12613"],
-    G2: ["02537", "15905"],
-    G3: [
-      "19974", "68554", "91512",
-      "60166", "90697", "22343"
-    ],
-    G4: ["9631", "5856", "6546", "2861"],
-    G5: [
-      "2064", "8820", "1891",
-      "7956", "7998", "8415"
-    ],
-    G6: ["759", "199", "732"],
-    G7: ["75", "17", "82", "21"]
-  }
-};
-
-/* ---------- Chuan hoa du lieu ---------- */
-
-function normalizeNumber(value) {
-  if (value === null || value === undefined) return "";
-  return String(value).trim().replace(/\s+/g, "");
-}
-
-function getNumbers(day, prize) {
-  const values = day && day[prize];
-  if (!Array.isArray(values)) return [];
-  return values.map(normalizeNumber).filter(Boolean);
-}
-
-function makeCell(prize, index, value, row, col) {
-  return {
-    id: `${prize}_${index}`,
-    prize,
-    index,
-    value,
-    row,
-    col
+  const CONFIG = {
+    sourceDate: "2026-10-23",
+    targetDate: "2026-10-22",
+    minPositions: 5
   };
-}
-
-function makeGrid(prize, numbers, columns) {
-  return numbers.map((value, index) =>
-    makeCell(
-      prize,
-      index,
-      value,
-      Math.floor(index / columns),
-      index % columns
-    )
-  );
-}
-
-/*
- * Lay cac chu so cua mot o.
- * digitIndex = 0 la chu so dau tien.
- */
-function getDigit(cell, digitIndex) {
-  if (!cell) return null;
-  if (!Number.isInteger(digitIndex)) return null;
-  if (digitIndex < 0 || digitIndex >= cell.value.length) return null;
-  return cell.value[digitIndex];
-}
-
-function getCell(cells, id) {
-  return cells.find(cell => cell.id === id) || null;
-}
-
-/* ---------- Xac dinh cac vung duoc phep ghep ---------- */
-
-function buildRegions(day) {
-  const db = getNumbers(day, "DB");
-  const g1 = getNumbers(day, "G1");
-  const g2 = getNumbers(day, "G2");
-  const g3 = getNumbers(day, "G3");
-  const g4 = getNumbers(day, "G4");
-  const g5 = getNumbers(day, "G5");
-  const g6 = getNumbers(day, "G6");
-
-  const regions = [];
 
   /*
-   * DB/G1: hai hang, moi hang la mot o so.
-   * Khong tu y ghep cac chu so khong ke nhau.
+   * DU LIEU KIEM THU CU.
+   * Chua phai du lieu da xac minh tu website.
+   * Khi su dung du lieu thuc te, truyen sourceDay va
+   * previousDay vao analyze().
    */
-  if (db.length >= 1 && g1.length >= 1) {
-    regions.push({
-      id: "DB_G1",
-      type: "grid",
-      cells: [
-        makeCell("DB", 0, db[0], 0, 0),
-        makeCell("G1", 0, g1[0], 1, 0)
+
+  const TEST_DATA = {
+    "2026-10-23": {
+      DB: ["97067"],
+      G1: ["19688"],
+      G2: ["87440", "68563"],
+      G3: [
+        "98237", "96450", "34516",
+        "92414", "41011", "49196"
       ],
-      columns: 1
-    });
-  }
+      G4: ["0840", "7322", "9978", "7001"],
+      G5: [
+        "0664", "1595", "8514",
+        "6342", "2372", "0724"
+      ],
+      G6: ["953", "200", "521"],
+      G7: ["70", "16", "53", "03"]
+    },
+
+    "2026-10-22": {
+      DB: ["25814"],
+      G1: ["12613"],
+      G2: ["02537", "15905"],
+      G3: [
+        "19974", "68554", "91512",
+        "60166", "90697", "22343"
+      ],
+      G4: ["9631", "5856", "6546", "2861"],
+      G5: [
+        "2064", "8820", "1891",
+        "7956", "7998", "8415"
+      ],
+      G6: ["759", "199", "732"],
+      G7: ["75", "17", "82", "21"]
+    }
+  };
+
+  // =====================================================
+  // 1. KHAI BAO CAC VUNG DUOC PHEP GHEP
+  // =====================================================
 
   /*
-   * G3: thu tu 1,2,3 tren hang tren;
-   * 4,5,6 tren hang duoi.
+   * index bat dau tu 0:
+   *
+   * G3:
+   * 0, 1, 2 = hang tren
+   * 3, 4, 5 = hang duoi
+   *
+   * G5:
+   * 0, 1, 2 = hang tren
+   * 3, 4, 5 = hang duoi
+   *
+   * G6:
+   * 0, 1, 2 = ba so tu trai sang phai
+   *
+   * DB va G1 moi giai co mot so.
    */
-  if (g3.length >= 6) {
-    regions.push({
-      id: "G3",
-      type: "grid",
-      cells: makeGrid("G3", g3.slice(0, 6), 3),
-      columns: 3
-    });
+
+  const REGION_CONFIG = [
+    // ---------------- VUNG DO DB + G1 ----------------
+    {
+      id: "RED_DB_G1",
+      type: "red",
+      cells: [
+        { prize: "DB", index: 0 },
+        { prize: "G1", index: 0 }
+      ]
+    },
+
+    // ---------------- VUNG DO G3 ----------------
+    {
+      id: "RED_G3_LEFT",
+      type: "red",
+      cells: [
+        { prize: "G3", index: 0 },
+        { prize: "G3", index: 3 }
+      ]
+    },
+    {
+      id: "RED_G3_CENTER",
+      type: "red",
+      cells: [
+        { prize: "G3", index: 1 },
+        { prize: "G3", index: 4 }
+      ]
+    },
+    {
+      id: "RED_G3_RIGHT",
+      type: "red",
+      cells: [
+        { prize: "G3", index: 2 },
+        { prize: "G3", index: 5 }
+      ]
+    },
+
+    // ---------------- VUNG DO G5 + G6 ----------------
+    {
+      id: "RED_G5_LEFT",
+      type: "red",
+      cells: [
+        { prize: "G5", index: 0 },
+        { prize: "G5", index: 3 },
+        { prize: "G6", index: 0 }
+      ]
+    },
+    {
+      id: "RED_G5_CENTER",
+      type: "red",
+      cells: [
+        { prize: "G5", index: 1 },
+        { prize: "G5", index: 4 },
+        { prize: "G6", index: 1 }
+      ]
+    },
+    {
+      id: "RED_G5_RIGHT",
+      type: "red",
+      cells: [
+        { prize: "G5", index: 2 },
+        { prize: "G5", index: 5 },
+        { prize: "G6", index: 2 }
+      ]
+    },
+
+    // ---------------- VUNG DEN G2 ----------------
+    {
+      id: "BLACK_G2_1",
+      type: "black",
+      cells: [{ prize: "G2", index: 0 }]
+    },
+    {
+      id: "BLACK_G2_2",
+      type: "black",
+      cells: [{ prize: "G2", index: 1 }]
+    },
+
+    // ---------------- VUNG DEN G4 ----------------
+    {
+      id: "BLACK_G4_1",
+      type: "black",
+      cells: [{ prize: "G4", index: 0 }]
+    },
+    {
+      id: "BLACK_G4_2",
+      type: "black",
+      cells: [{ prize: "G4", index: 1 }]
+    },
+    {
+      id: "BLACK_G4_3",
+      type: "black",
+      cells: [{ prize: "G4", index: 2 }]
+    },
+    {
+      id: "BLACK_G4_4",
+      type: "black",
+      cells: [{ prize: "G4", index: 3 }]
+    }
+  ];
+
+  // =====================================================
+  // 2. CHUAN HOA VA DOC DU LIEU
+  // =====================================================
+
+  function normalizeNumber(value) {
+    if (value === null || value === undefined) {
+      return "";
+    }
+
+    return String(value).trim().replace(/\s+/g, "");
   }
 
-  /*
-   * G5: hai hang, moi hang 3 so.
-   */
-  if (g5.length >= 6) {
-    regions.push({
-      id: "G5",
-      type: "grid",
-      cells: makeGrid("G5", g5.slice(0, 6), 3),
-      columns: 3
-    });
+  function getNumbers(day, prize) {
+    const values = day && day[prize];
+
+    if (!Array.isArray(values)) {
+      return [];
+    }
+
+    return values.map(normalizeNumber);
   }
 
-  /*
-   * G2 va G4: ghep chu so lien ke ben trong tung so.
-   */
-  for (const prize of ["G2", "G4"]) {
-    const numbers = prize === "G2" ? g2 : g4;
-    numbers.forEach((value, index) => {
-      regions.push({
-        id: `${prize}_ADJ_${index}`,
-        type: "withinNumber",
-        cells: [
-          makeCell(prize, index, value, 0, 0)
-        ]
-      });
-    });
+  function getNumber(day, prize, index) {
+    const numbers = getNumbers(day, prize);
+    return numbers[index] || "";
   }
 
-  /*
-   * G5 hang duoi + G6.
-   * Moi cap o tuong ung duoc ghep cac chu so
-   * cung chi so, giua hai so.
-   */
-  if (g5.length >= 6 && g6.length >= 3) {
-    for (let col = 0; col < 3; col++) {
-      regions.push({
-        id: `G5_G6_COL_${col}`,
-        type: "pairedCells",
-        cells: [
-          makeCell("G5", col + 3, g5[col + 3], 0, col),
-          makeCell("G6", col, g6[col], 1, col)
-        ]
-      });
+  function getCellId(prize, index) {
+    return `${prize}_${index}`;
+  }
+
+  function getCellValue(day, cellConfig) {
+    return getNumber(
+      day,
+      cellConfig.prize,
+      cellConfig.index
+    );
+  }
+
+  function getDigit(day, position) {
+    const number = getNumber(
+      day,
+      position.prize,
+      position.numberIndex
+    );
+
+    if (
+      !number ||
+      !Number.isInteger(position.digitIndex) ||
+      position.digitIndex < 0 ||
+      position.digitIndex >= number.length
+    ) {
+      return null;
+    }
+
+    return number[position.digitIndex];
+  }
+
+  function makePosition(day, cellConfig, digitIndex) {
+    const number = getCellValue(day, cellConfig);
+
+    if (
+      !number ||
+      digitIndex < 0 ||
+      digitIndex >= number.length
+    ) {
+      return null;
+    }
+
+    return {
+      cellId: getCellId(
+        cellConfig.prize,
+        cellConfig.index
+      ),
+      prize: cellConfig.prize,
+      numberIndex: cellConfig.index,
+      number: number,
+      digitIndex: digitIndex
+    };
+  }
+
+  // =====================================================
+  // 3. KIEM TRA CAU TRUC DU LIEU VA VUNG
+  // =====================================================
+
+  function validateDay(day, label) {
+    if (!day || typeof day !== "object") {
+      throw new Error(`Du lieu ${label} khong hop le.`);
+    }
+
+    const requiredPrizes = [
+      "DB", "G1", "G2", "G3",
+      "G4", "G5", "G6", "G7"
+    ];
+
+    const errors = [];
+
+    for (const prize of requiredPrizes) {
+      if (!Array.isArray(day[prize])) {
+        errors.push(`Thieu mang ket qua ${prize}.`);
+      }
+    }
+
+    if (errors.length) {
+      throw new Error(
+        `Du lieu ${label} khong day du: ` +
+        errors.join(" ")
+      );
     }
   }
 
-  return regions;
-}
+  function validateRegions(regions) {
+    const ids = new Set();
 
-/* ---------- Ghép cac vi tri trong mot vung ---------- */
+    for (const region of regions) {
+      if (!region || !region.id) {
+        throw new Error("Vung ghep thieu id.");
+      }
 
-function isAdjacent(a, b) {
-  if (!a || !b) return false;
+      if (ids.has(region.id)) {
+        throw new Error(
+          `Trung ma vung: ${region.id}`
+        );
+      }
 
-  const dr = Math.abs(a.row - b.row);
-  const dc = Math.abs(a.col - b.col);
+      ids.add(region.id);
 
-  return dr <= 1 && dc <= 1 && (dr + dc > 0);
-}
+      if (
+        region.type !== "red" &&
+        region.type !== "black"
+      ) {
+        throw new Error(
+          `Loai vung khong hop le: ${region.id}`
+        );
+      }
 
-function directionOf(a, b) {
-  const dr = b.row - a.row;
-  const dc = b.col - a.col;
-
-  if (dr === 0 && dc !== 0) return "horizontal";
-  if (dc === 0 && dr !== 0) return "vertical";
-  if (Math.abs(dr) === Math.abs(dc)) {
-    return dr * dc > 0 ? "diagonal-right" : "diagonal-left";
-  }
-
-  return "adjacent";
-}
-
-function makePosition(cell, digitIndex) {
-  return {
-    cellId: cell.id,
-    prize: cell.prize,
-    numberIndex: cell.index,
-    number: cell.value,
-    row: cell.row,
-    col: cell.col,
-    digitIndex
-  };
-}
-
-function makeCreation(region, a, ai, b, bi) {
-  const da = getDigit(a, ai);
-  const db = getDigit(b, bi);
-
-  if (da === null || db === null) return null;
-
-  return {
-    regionId: region.id,
-    pair: da + db,
-    left: makePosition(a, ai),
-    right: makePosition(b, bi),
-    direction: directionOf(a, b)
-  };
-}
-
-/*
- * Ghép cac o ke nhau trong luoi:
- * - Moi cap o chi xet mot lan.
- * - Moi vi tri chu so trong hai o deu duoc xet.
- * - Khong noi sang vung khac.
- */
-function createGridPairs(region) {
-  const results = [];
-  const cells = region.cells;
-
-  for (let i = 0; i < cells.length; i++) {
-    for (let j = i + 1; j < cells.length; j++) {
-      const a = cells[i];
-      const b = cells[j];
-
-      if (!isAdjacent(a, b)) continue;
-
-      for (let ai = 0; ai < a.value.length; ai++) {
-        for (let bi = 0; bi < b.value.length; bi++) {
-          const item = makeCreation(region, a, ai, b, bi);
-          if (item) results.push(item);
-        }
+      if (!Array.isArray(region.cells) ||
+          region.cells.length === 0) {
+        throw new Error(
+          `Vung ${region.id} khong co o so.`
+        );
       }
     }
   }
 
-  return results;
-}
+  // =====================================================
+  // 4. TAO CAP TRONG VUNG DO
+  // =====================================================
 
-/*
- * DB/G1 va G5/G6:
- * chi ghep cac o trong cung cap.
- * Moi chu so cua o tren ghep voi moi chu so o duoi
- * neu hai o co quan he ke nhau trong vung.
- */
-function createPairedCellPairs(region) {
-  const results = [];
-  const [a, b] = region.cells;
+  /*
+   * Vung do:
+   * Lay tat ca vi tri chu so trong cung mot vung.
+   * Moi hai vi tri khac nhau tao thanh mot cap.
+   *
+   * Khong ghep sang vung khac.
+   * Khong gioi han phai lien ke.
+   */
 
-  if (!a || !b || !isAdjacent(a, b)) return results;
+  function createRedPairs(day, region) {
+    const positions = [];
 
-  for (let ai = 0; ai < a.value.length; ai++) {
-    for (let bi = 0; bi < b.value.length; bi++) {
-      const item = makeCreation(region, a, ai, b, bi);
-      if (item) results.push(item);
-    }
-  }
+    for (const cellConfig of region.cells) {
+      const number = getCellValue(day, cellConfig);
 
-  return results;
-}
+      for (let digitIndex = 0;
+           digitIndex < number.length;
+           digitIndex++) {
 
-/*
- * G2/G4: cac chu so lien ke trong cung mot so.
- * Vi du 28540 -> 28, 85, 54, 40.
- */
-function createWithinNumberPairs(region) {
-  const results = [];
-  const cell = region.cells[0];
+        const position = makePosition(
+          day,
+          cellConfig,
+          digitIndex
+        );
 
-  if (!cell) return results;
-
-  for (let i = 0; i < cell.value.length - 1; i++) {
-    results.push({
-      regionId: region.id,
-      pair: cell.value[i] + cell.value[i + 1],
-      left: makePosition(cell, i),
-      right: makePosition(cell, i + 1),
-      direction: "consecutive-digits"
-    });
-  }
-
-  return results;
-}
-
-function createAllPairs(day) {
-  const creations = [];
-
-  for (const region of buildRegions(day)) {
-    let items = [];
-
-    if (region.type === "grid") {
-      items = createGridPairs(region);
-    } else if (region.type === "pairedCells") {
-      items = createPairedCellPairs(region);
-    } else if (region.type === "withinNumber") {
-      items = createWithinNumberPairs(region);
+        if (position) {
+          positions.push(position);
+        }
+      }
     }
 
-    creations.push(...items);
-  }
+    const creations = [];
 
-  return creations;
-}
+    for (let i = 0; i < positions.length; i++) {
+      for (let j = i + 1; j < positions.length; j++) {
+        const left = positions[i];
+        const right = positions[j];
 
-/* ---------- Gom cap dao chieu va dem vi tri ---------- */
+        const leftDigit = getDigit(day, left);
+        const rightDigit = getDigit(day, right);
 
-function canonicalPair(pair) {
-  if (typeof pair !== "string" || pair.length !== 2) return pair;
-  const reverse = pair[1] + pair[0];
-  return pair <= reverse ? pair : reverse;
-}
+        if (
+          leftDigit === null ||
+          rightDigit === null
+        ) {
+          continue;
+        }
 
-function groupCreations(creations) {
-  const groups = new Map();
-
-  for (const creation of creations) {
-    const key = canonicalPair(creation.pair);
-
-    if (!groups.has(key)) {
-      groups.set(key, {
-        pair: key === creation.pair ? key : `${key[1]}${key[0]}/${key}`,
-        canonical: key,
-        count: 0,
-        positions: []
-      });
+        creations.push({
+          regionId: region.id,
+          regionType: "red",
+          pair: leftDigit + rightDigit,
+          left,
+          right,
+          direction: "all-combinations"
+        });
+      }
     }
 
-    const group = groups.get(key);
-    group.count += 1;
-    group.positions.push(creation);
+    return creations;
   }
 
-  return [...groups.values()]
-    .filter(group => group.count >= CONFIG.minPositions)
-    .sort((a, b) =>
-      b.count - a.count || a.canonical.localeCompare(b.canonical)
-    );
-}
+  // =====================================================
+  // 5. TAO CAP TRONG VUNG DEN
+  // =====================================================
 
-/* ---------- Ap dung dung toa do sang ngay truoc ---------- */
+  /*
+   * Vung den:
+   * Moi so duoc xu ly rieng.
+   * Chi ghep digit i voi digit i+1.
+   * Khong ghep giua hai so.
+   */
 
-function applyOneCreation(creation, targetDay) {
-  const source = creation;
-  const regions = buildRegions(targetDay);
+  function createBlackPairs(day, region) {
+    const creations = [];
 
-  const region = regions.find(r => r.id === source.regionId);
-  if (!region) {
-    return { ...source, appliedPair: null, status: "MISSING_REGION" };
+    for (const cellConfig of region.cells) {
+      const number = getCellValue(day, cellConfig);
+
+      for (let i = 0; i < number.length - 1; i++) {
+        const left = makePosition(
+          day,
+          cellConfig,
+          i
+        );
+
+        const right = makePosition(
+          day,
+          cellConfig,
+          i + 1
+        );
+
+        if (!left || !right) {
+          continue;
+        }
+
+        creations.push({
+          regionId: region.id,
+          regionType: "black",
+          pair: number[i] + number[i + 1],
+          left,
+          right,
+          direction: "adjacent-digits"
+        });
+      }
+    }
+
+    return creations;
   }
 
-  const leftCell = getCell(region.cells, source.left.cellId);
-  const rightCell = getCell(region.cells, source.right.cellId);
+  // =====================================================
+  // 6. TAO TAT CA CAP THEO CAC VUNG DA KHAI BAO
+  // =====================================================
 
-  if (!leftCell || !rightCell) {
-    return { ...source, appliedPair: null, status: "MISSING_CELL" };
+  function createAllPairs(day, regions = REGION_CONFIG) {
+    validateRegions(regions);
+
+    const creations = [];
+
+    for (const region of regions) {
+      let items = [];
+
+      if (region.type === "red") {
+        items = createRedPairs(day, region);
+      }
+
+      if (region.type === "black") {
+        items = createBlackPairs(day, region);
+      }
+
+      creations.push(...items);
+    }
+
+    return creations;
   }
 
-  const leftDigit = getDigit(leftCell, source.left.digitIndex);
-  const rightDigit = getDigit(rightCell, source.right.digitIndex);
+  // =====================================================
+  // 7. GOP CAP DAO CHIEU
+  // =====================================================
 
-  if (leftDigit === null || rightDigit === null) {
-    return { ...source, appliedPair: null, status: "MISSING_DIGIT" };
+  function canonicalPair(pair) {
+    if (
+      typeof pair !== "string" ||
+      pair.length !== 2
+    ) {
+      return pair;
+    }
+
+    const reverse = pair[1] + pair[0];
+
+    return pair <= reverse ? pair : reverse;
   }
 
-  return {
-    ...source,
-    appliedPair: leftDigit + rightDigit,
-    appliedLeft: makePosition(leftCell, source.left.digitIndex),
-    appliedRight: makePosition(rightCell, source.right.digitIndex),
-    status: "OK"
-  };
-}
+  function positionSignature(creation) {
+    const left = creation.left;
+    const right = creation.right;
 
-function applyPatterns(patterns, targetDay) {
-  const applied = [];
+    return [
+      creation.regionId,
+      left.cellId,
+      left.digitIndex,
+      right.cellId,
+      right.digitIndex
+    ].join("|");
+  }
 
-  for (const group of patterns) {
-    for (const creation of group.positions) {
-      applied.push({
-        sourceCanonical: group.canonical,
+  // =====================================================
+  // 8. LOC MAU CO IT NHAT 5 LUOT TAO THANH
+  // =====================================================
+
+  function groupCreations(
+    creations,
+    minPositions = CONFIG.minPositions
+  ) {
+    const groups = new Map();
+
+    for (const creation of creations) {
+      const key = canonicalPair(creation.pair);
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          canonical: key,
+          count: 0,
+          positions: [],
+          signatures: new Set()
+        });
+      }
+
+      const group = groups.get(key);
+      const signature = positionSignature(creation);
+
+      // Moi cap toa do chi duoc dem mot lan.
+      if (group.signatures.has(signature)) {
+        continue;
+      }
+
+      group.signatures.add(signature);
+      group.count++;
+
+      group.positions.push({
+        ...creation,
         sourcePair: creation.pair,
-        ...applyOneCreation(creation, targetDay)
+        sourceCanonical: key
       });
     }
+
+    return Array.from(groups.values())
+      .filter(group => group.count >= minPositions)
+      .map(group => ({
+        pair: group.canonical,
+        canonical: group.canonical,
+        reverse:
+          group.canonical[1] + group.canonical[0],
+        count: group.count,
+        positions: group.positions
+      }))
+      .sort((a, b) =>
+        b.count - a.count ||
+        a.canonical.localeCompare(b.canonical)
+      );
   }
 
-  return applied;
-}
+  // =====================================================
+  // 9. AP DUNG TOA DO MAU SANG NGAY N-1
+  // =====================================================
 
-/* ---------- Ham chinh de index.html goi ---------- */
+  /*
+   * Khong tim mau moi tren ngay N-1.
+   * Khong doi cellId.
+   * Khong doi digitIndex.
+   * Chi thay gia tri so cua ngay N-1.
+   */
 
-function analyze(sourceDay, targetDay) {
-  const source = sourceDay || TEST_DATA[CONFIG.sourceDate];
-  const target = targetDay || TEST_DATA[CONFIG.targetDate];
+  function applyOneCreation(creation, previousDay) {
+    const leftDigit = getDigit(
+      previousDay,
+      creation.left
+    );
 
-  if (!source || !target) {
-    throw new Error("Khong tim thay du lieu ngay nguon hoac ngay ap dung.");
+    const rightDigit = getDigit(
+      previousDay,
+      creation.right
+    );
+
+    if (
+      leftDigit === null ||
+      rightDigit === null
+    ) {
+      return {
+        ...creation,
+        appliedPair: null,
+        status: "INVALID_POSITION"
+      };
+    }
+
+    const appliedLeftNumber = getNumber(
+      previousDay,
+      creation.left.prize,
+      creation.left.numberIndex
+    );
+
+    const appliedRightNumber = getNumber(
+      previousDay,
+      creation.right.prize,
+      creation.right.numberIndex
+    );
+
+    return {
+      ...creation,
+
+      appliedPair: leftDigit + rightDigit,
+
+      appliedCanonical: canonicalPair(
+        leftDigit + rightDigit
+      ),
+
+      appliedLeft: {
+        ...creation.left,
+        number: appliedLeftNumber
+      },
+
+      appliedRight: {
+        ...creation.right,
+        number: appliedRightNumber
+      },
+
+      status: "OK"
+    };
   }
 
-  const allSourceCreations = createAllPairs(source);
-  const sourceGroups = groupCreations(allSourceCreations);
-  const applied = applyPatterns(sourceGroups, target);
+  function applyPatterns(patterns, previousDay) {
+    const applied = [];
 
-  return {
-    version: VERSION,
-    sourceDate: CONFIG.sourceDate,
-    targetDate: CONFIG.targetDate,
-    minPositions: CONFIG.minPositions,
-    sourceCreationCount: allSourceCreations.length,
-    qualifiedPatternCount: sourceGroups.length,
-    patterns: sourceGroups,
+    for (const group of patterns) {
+      for (const creation of group.positions) {
+        const result = applyOneCreation(
+          creation,
+          previousDay
+        );
+
+        applied.push({
+          sourceCanonical: group.canonical,
+          sourcePair: creation.sourcePair,
+          ...result
+        });
+      }
+    }
+
+    return applied;
+  }
+
+  // =====================================================
+  // 10. LAY DUOI 2 SO DB -> G7 CUA NGAY N
+  // =====================================================
+
+  const RESULT_PRIZES = [
+    "DB", "G1", "G2", "G3",
+    "G4", "G5", "G6", "G7"
+  ];
+
+  function collectActualTails(sourceDay) {
+    const tails = [];
+
+    for (const prize of RESULT_PRIZES) {
+      const numbers = getNumbers(sourceDay, prize);
+
+      numbers.forEach((number, index) => {
+        if (number.length < 2) {
+          return;
+        }
+
+        tails.push({
+          prize,
+          numberIndex: index,
+          number,
+          tail: number.slice(-2)
+        });
+      });
+    }
+
+    return tails;
+  }
+
+  // =====================================================
+  // 11. DOI CHIEU CAP NGAY N-1 VOI KET QUA NGAY N
+  // =====================================================
+
+  /*
+   * QUAN TRONG:
+   * applied duoc tao tu previousDay (N-1).
+   * actualTails duoc lay tu sourceDay (N).
+   *
+   * Neu cap 12 thi chap nhan duoi 12 hoac 21.
+   */
+
+  function matchActualResults(
     applied,
-    note:
-      "Du lieu hien tai la du lieu thu nghiem. Chua tu dong doc website va chua doi chieu ket qua thuc te."
-  };
-}
+    sourceDay
+  ) {
+    const actualTails = collectActualTails(sourceDay);
 
-/* ---------- Ho tro chay trong trinh duyet va Node.js ---------- */
+    const matched = [];
+    const unmatched = [];
 
-if (typeof window !== "undefined") {
-  window.XSMBAlgorithm = {
+    for (const item of applied) {
+      if (
+        item.status !== "OK" ||
+        !item.appliedPair
+      ) {
+        continue;
+      }
+
+      const pair = item.appliedPair;
+      const reverse = pair[1] + pair[0];
+
+      const hits = actualTails.filter(result =>
+        result.tail === pair ||
+        result.tail === reverse
+      );
+
+      const record = {
+        ...item,
+        matched: hits.length > 0,
+        matchedResults: hits
+      };
+
+      if (hits.length > 0) {
+        matched.push(record);
+      } else {
+        unmatched.push(record);
+      }
+    }
+
+    // Gom cac cap da khop theo cap dao chieu.
+    const groups = new Map();
+
+    for (const item of matched) {
+      const key = item.appliedCanonical;
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          pair: key,
+          canonical: key,
+          count: 0,
+          positions: [],
+          matchedResults: []
+        });
+      }
+
+      const group = groups.get(key);
+
+      group.count++;
+      group.positions.push(item);
+      group.matchedResults.push(
+        ...item.matchedResults
+      );
+    }
+
+    const matchedGroups = Array.from(groups.values())
+      .map(group => {
+        const uniqueResults = [];
+        const seen = new Set();
+
+        for (const result of group.matchedResults) {
+          const key = [
+            result.prize,
+            result.numberIndex,
+            result.tail,
+            result.number
+          ].join("|");
+
+          if (seen.has(key)) continue;
+
+          seen.add(key);
+          uniqueResults.push(result);
+        }
+
+        return {
+          ...group,
+          matchedResults: uniqueResults
+        };
+      })
+      .sort((a, b) =>
+        b.count - a.count ||
+        a.canonical.localeCompare(b.canonical)
+      );
+
+    return {
+      actualTails,
+      matched,
+      unmatched,
+      matchedGroups
+    };
+  }
+
+  // =====================================================
+  // 12. HAM PHAN TICH CHINH
+  // =====================================================
+
+  function analyze(
+    sourceDay,
+    previousDay,
+    options = {}
+  ) {
+    const source = sourceDay ||
+      TEST_DATA[CONFIG.sourceDate];
+
+    const previous = previousDay ||
+      TEST_DATA[CONFIG.targetDate];
+
+    const minPositions = Number(
+      options.minPositions ||
+      CONFIG.minPositions
+    );
+
+    const regions = options.regions ||
+      REGION_CONFIG;
+
+    if (
+      !Number.isInteger(minPositions) ||
+      minPositions < 1
+    ) {
+      throw new Error(
+        "Nguong minPositions phai la so nguyen duong."
+      );
+    }
+
+    validateDay(source, "ngay N");
+    validateDay(previous, "ngay N-1");
+    validateRegions(regions);
+
+    // Buoc 1: Tim mau tren ngay N.
+    const sourceCreations = createAllPairs(
+      source,
+      regions
+    );
+
+    // Buoc 2: Loc mau toi thieu 5 vi tri.
+    const patterns = groupCreations(
+      sourceCreations,
+      minPositions
+    );
+
+    // Buoc 3: Ap dung toa do sang ngay N-1.
+    const applied = applyPatterns(
+      patterns,
+      previous
+    );
+
+    // Buoc 4: Doi chieu voi ket qua ngay N.
+    const comparison = matchActualResults(
+      applied,
+      source
+    );
+
+    const validApplied = applied.filter(
+      item => item.status === "OK"
+    );
+
+    return {
+      version: VERSION,
+
+      sourceDate:
+        source.date || CONFIG.sourceDate,
+
+      targetDate:
+        previous.date || CONFIG.targetDate,
+
+      comparisonDate:
+        source.date || CONFIG.sourceDate,
+
+      minPositions,
+
+      regionCount: regions.length,
+
+      sourceCreationCount:
+        sourceCreations.length,
+
+      qualifiedPatternCount:
+        patterns.length,
+
+      appliedPositionCount:
+        applied.length,
+
+      validAppliedPositionCount:
+        validApplied.length,
+
+      matchedPositionCount:
+        comparison.matched.length,
+
+      unmatchedPositionCount:
+        comparison.unmatched.length,
+
+      matchedPairGroupCount:
+        comparison.matchedGroups.length,
+
+      patterns,
+      applied,
+
+      actualTails:
+        comparison.actualTails,
+
+      matched:
+        comparison.matched,
+
+      unmatched:
+        comparison.unmatched,
+
+      matchedGroups:
+        comparison.matchedGroups,
+
+      summary: {
+        sourceDate:
+          source.date || CONFIG.sourceDate,
+
+        appliedDate:
+          previous.date || CONFIG.targetDate,
+
+        comparisonDate:
+          source.date || CONFIG.sourceDate,
+
+        sourceCreations:
+          sourceCreations.length,
+
+        qualifiedPatterns:
+          patterns.length,
+
+        appliedPositions:
+          applied.length,
+
+        validAppliedPositions:
+          validApplied.length,
+
+        matchedPositions:
+          comparison.matched.length,
+
+        unmatchedPositions:
+          comparison.unmatched.length,
+
+        matchedPairGroups:
+          comparison.matchedGroups.length
+      },
+
+      note:
+        "Mau duoc tim tren ngay N; toa do duoc ap dung sang ngay N-1; cap tao ra duoc doi chieu voi duoi DB den G7 cua ngay N. TEST_DATA la du lieu thu nghiem."
+    };
+  }
+
+  // =====================================================
+  // 13. XUAT API
+  // =====================================================
+
+  const API = {
     VERSION,
     CONFIG,
     TEST_DATA,
-    buildRegions,
+    REGION_CONFIG,
+
+    normalizeNumber,
+    getNumbers,
+    validateDay,
+    validateRegions,
+
+    createRedPairs,
+    createBlackPairs,
     createAllPairs,
+
+    canonicalPair,
     groupCreations,
+
+    applyOneCreation,
     applyPatterns,
+
+    collectActualTails,
+    matchActualResults,
+
     analyze
   };
 
-  window.analyze = analyze;
-}
+  if (typeof window !== "undefined") {
+    window.XSMBAlgorithm = API;
+    window.analyze = analyze;
+  }
 
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
-    VERSION,
-    CONFIG,
-    TEST_DATA,
-    buildRegions,
-    createAllPairs,
-    groupCreations,
-    applyPatterns,
-    analyze
-  };
-}
+  if (
+    typeof module !== "undefined" &&
+    module.exports
+  ) {
+    module.exports = API;
+  }
+
+})(typeof globalThis !== "undefined" ? globalThis : this);
