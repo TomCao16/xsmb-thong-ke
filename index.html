@@ -4,9 +4,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>XSMB Thống Kê - Kiểm Thử Thuật Toán</title>
+
+  <title>XSMB Thống Kê - Thuật Toán 3.0.0</title>
+
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -17,12 +21,24 @@
     }
 
     main {
-      max-width: 1100px;
+      max-width: 1250px;
       margin: auto;
     }
 
-    h1 { font-size: 25px; }
-    h2 { font-size: 19px; }
+    h1 {
+      font-size: 25px;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 19px;
+      margin-top: 0;
+    }
+
+    h3 {
+      font-size: 16px;
+      margin-top: 18px;
+    }
 
     .panel {
       background: white;
@@ -42,9 +58,20 @@
       font-weight: bold;
     }
 
-    button:hover { background: #0d4299; }
+    button:hover {
+      background: #0d4299;
+    }
 
-    .muted { color: #667085; font-size: 14px; }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .muted {
+      color: #667085;
+      font-size: 14px;
+      line-height: 1.5;
+    }
 
     .status {
       padding: 12px;
@@ -52,18 +79,35 @@
       background: #eef4ff;
       margin-top: 12px;
       overflow-wrap: anywhere;
+      line-height: 1.5;
     }
 
-    .error { background: #fff0f0; color: #a40000; }
-    .success { background: #eaf8ef; color: #176534; }
+    .error {
+      background: #fff0f0;
+      color: #a40000;
+    }
 
-    .table-wrap { overflow-x: auto; }
+    .success {
+      background: #eaf8ef;
+      color: #176534;
+    }
+
+    .warning {
+      background: #fff7e6;
+      color: #8a5700;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      width: 100%;
+    }
 
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 12px;
-      font-size: 14px;
+      font-size: 13px;
+      min-width: 650px;
     }
 
     th, td {
@@ -71,157 +115,1016 @@
       padding: 9px;
       text-align: left;
       vertical-align: top;
+      overflow-wrap: anywhere;
     }
 
-    th { background: #f0f3f8; }
+    th {
+      background: #f0f3f8;
+      white-space: nowrap;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .metric {
+      background: #f5f7fb;
+      border: 1px solid #e1e6ef;
+      border-radius: 8px;
+      padding: 13px;
+    }
+
+    .metric-label {
+      color: #667085;
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .metric-value {
+      font-size: 23px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .pair {
+      font-weight: bold;
+      font-size: 16px;
+      color: #1457c5;
+      white-space: nowrap;
+    }
+
+    .matched {
+      color: #168044;
+      font-weight: bold;
+    }
+
+    .unmatched {
+      color: #b42318;
+      font-weight: bold;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 7px;
+      border-radius: 5px;
+      background: #eef2f7;
+      font-size: 11px;
+      margin: 2px;
+    }
+
+    .tag-red {
+      background: #fff0f0;
+      color: #b42318;
+    }
+
+    .tag-black {
+      background: #e9edf3;
+      color: #344054;
+    }
+
+    .tag-green {
+      background: #eaf8ef;
+      color: #176534;
+    }
+
+    .detail {
+      line-height: 1.65;
+      min-width: 240px;
+    }
+
+    .detail div {
+      margin-bottom: 4px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .section-note {
+      color: #667085;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
 
     pre {
       white-space: pre-wrap;
       overflow-wrap: anywhere;
       font-size: 12px;
+      background: #f7f8fa;
+      padding: 12px;
+      border-radius: 6px;
+      max-height: 650px;
+      overflow: auto;
     }
 
-    .hidden { display: none; }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      .panel {
+        padding: 13px;
+      }
+
+      h1 {
+        font-size: 21px;
+      }
+
+      .metric-value {
+        font-size: 20px;
+      }
+    }
   </style>
 </head>
 
 <body>
 <main>
+
   <h1>Thống kê xổ số miền Bắc</h1>
+
   <p class="muted">
     Dự án độc lập — kiểm thử thuật toán theo vị trí.
+    Phiên bản thuật toán 3.0.0.
   </p>
 
+  <!-- THONG TIN KIEM THU -->
   <section class="panel">
+
     <h2>Thông tin kiểm thử</h2>
-    <p>Ngày tìm mẫu: <strong>23/10/2026</strong></p>
-    <p>Ngày áp dụng mẫu: <strong>22/10/2026</strong></p>
-    <p>Điều kiện: ít nhất 4 vị trí tạo thành.</p>
-    <p class="muted">
-      Dữ liệu hiện tại là dữ liệu thử nghiệm trong algorithm.js,
-      chưa xác minh tự động với website nguồn.
+
+    <p>
+      Ngày tìm mẫu:
+      <strong id="sourceDateInfo">23/10/2026</strong>
     </p>
 
-    <button id="runButton">CHẠY KIỂM THỬ</button>
-    <div id="status" class="status">
-      Sẵn sàng. Nhấn “CHẠY KIỂM THỬ”.
+    <p>
+      Ngày áp dụng mẫu:
+      <strong id="targetDateInfo">22/10/2026</strong>
+    </p>
+
+    <p>
+      Ngày đối chiếu:
+      <strong id="comparisonDateInfo">23/10/2026</strong>
+    </p>
+
+    <p>
+      Điều kiện:
+      <strong>Ít nhất 5 lượt tạo thành.</strong>
+    </p>
+
+    <p class="muted">
+      Vùng đỏ: ghép mọi cặp vị trí trong cùng vùng.
+      Vùng đen: chỉ ghép hai chữ số liền kề trong từng số.
+      Không tự ý ghép ngoài vùng đã khai báo.
+    </p>
+
+    <p class="muted">
+      Quy trình: Ngày N tìm mẫu → ngày N−1 áp dụng tọa độ
+      → ngày N đối chiếu đuôi DB đến G7.
+    </p>
+
+    <div class="toolbar">
+      <button id="runButton">CHẠY THUẬT TOÁN</button>
     </div>
+
+    <div id="status" class="status">
+      Sẵn sàng. Nhấn “CHẠY THUẬT TOÁN”.
+    </div>
+
   </section>
 
+
+  <!-- TONG QUAN -->
   <section id="summary" class="panel hidden">
+
     <h2>Kết quả tổng quan</h2>
+
     <div id="summaryContent"></div>
+
+    <p id="algorithmNote" class="muted"></p>
+
   </section>
 
+
+  <!-- A: MAU NGAY N -->
   <section id="sourcePanel" class="panel hidden">
-    <h2>A. Mẫu tìm được ngày 23/10</h2>
+
+    <h2>A. Mẫu tìm được trên ngày N</h2>
+
+    <p class="section-note">
+      Chỉ hiển thị các cặp đạt ngưỡng tối thiểu 5 vị trí.
+      Mỗi dòng vị trí là một lần tạo cặp riêng biệt.
+      Cặp đảo chiều được nhóm chung.
+    </p>
+
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Cặp</th>
+            <th>STT</th>
+            <th>Cặp mẫu</th>
             <th>Số vị trí</th>
-            <th>Chi tiết vị trí</th>
+            <th>Chi tiết từng vị trí</th>
           </tr>
         </thead>
+
         <tbody id="sourceBody"></tbody>
       </table>
     </div>
+
   </section>
 
+
+  <!-- B: AP DUNG NGAY N-1 -->
   <section id="targetPanel" class="panel hidden">
-    <h2>B. Áp dụng tọa độ sang ngày 22/10</h2>
+
+    <h2>B. Áp dụng tọa độ sang ngày N−1</h2>
+
+    <p class="section-note">
+      Mỗi tọa độ của mẫu ngày N được chuyển nguyên vẹn
+      sang ngày N−1. Cặp mới được tạo từ chữ số tại
+      các tọa độ tương ứng.
+    </p>
+
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Cặp mẫu nguồn</th>
-            <th>Cặp tạo thành</th>
-            <th>Tọa độ và chữ số</th>
+            <th>STT</th>
+            <th>Cặp mẫu ngày N</th>
+            <th>Cặp tạo trên N−1</th>
+            <th>Vùng</th>
+            <th>Chi tiết tọa độ</th>
             <th>Trạng thái</th>
           </tr>
         </thead>
+
         <tbody id="targetBody"></tbody>
       </table>
     </div>
+
   </section>
 
-  <section id="jsonPanel" class="panel hidden">
-    <h2>Dữ liệu kết quả JSON</h2>
-    <button id="copyButton">SAO CHÉP JSON</button>
-    <pre id="jsonOutput"></pre>
+
+  <!-- C: DOI CHIEU -->
+  <section id="comparisonPanel" class="panel hidden">
+
+    <h2>C. Đối chiếu với kết quả thực tế ngày N</h2>
+
+    <p class="section-note">
+      Lấy hai số cuối của tất cả kết quả từ DB đến G7
+      trên ngày N. Cặp được tạo trên ngày N−1 chỉ được
+      giữ nếu trùng với đuôi thực tế, kể cả đảo chiều.
+    </p>
+
+    <h3>Các cặp khớp</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Cặp tạo trên N−1</th>
+            <th>Số lượt vị trí khớp</th>
+            <th>Kết quả ngày N khớp</th>
+            <th>Chi tiết vị trí tạo cặp</th>
+          </tr>
+        </thead>
+
+        <tbody id="matchedBody"></tbody>
+      </table>
+    </div>
+
+    <h3>Các cặp không khớp</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Cặp tạo trên N−1</th>
+            <th>Vùng</th>
+            <th>Chi tiết vị trí</th>
+          </tr>
+        </thead>
+
+        <tbody id="unmatchedBody"></tbody>
+      </table>
+    </div>
+
   </section>
+
+
+  <!-- D: DUOI THUC TE -->
+  <section id="actualPanel" class="panel hidden">
+
+    <h2>D. Danh sách đuôi hai số thực tế ngày N</h2>
+
+    <p class="section-note">
+      Dữ liệu được lấy từ DB, G1, G2, G3, G4, G5, G6 và G7.
+      Đây là tập dữ liệu dùng để đối chiếu.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Giải</th>
+            <th>STT kết quả</th>
+            <th>Kết quả đầy đủ</th>
+            <th>Hai số cuối</th>
+          </tr>
+        </thead>
+
+        <tbody id="actualBody"></tbody>
+      </table>
+    </div>
+
+  </section>
+
+
+  <!-- E: JSON -->
+  <section id="jsonPanel" class="panel hidden">
+
+    <h2>E. Dữ liệu kết quả JSON</h2>
+
+    <div class="toolbar">
+      <button id="copyButton">SAO CHÉP JSON</button>
+    </div>
+
+    <pre id="jsonOutput"></pre>
+
+  </section>
+
 </main>
 
+
+<!-- NAP THUAT TOAN -->
 <script src="./algorithm.js"></script>
+
 <script>
+(function () {
+  "use strict";
+
   const $ = id => document.getElementById(id);
+
+  let lastReport = null;
+
+  // ---------------------------------------------
+  // CAC HAM HIEN THI CO BAN
+  // ---------------------------------------------
+
+  function addText(parent, tag, value, className) {
+    const element = document.createElement(tag || "div");
+
+    element.textContent =
+      value === null || value === undefined
+        ? ""
+        : String(value);
+
+    if (className) {
+      element.className = className;
+    }
+
+    parent.appendChild(element);
+
+    return element;
+  }
+
+  function addCell(row, value, className) {
+    const cell = document.createElement("td");
+
+    cell.textContent =
+      value === null || value === undefined
+        ? ""
+        : String(value);
+
+    if (className) {
+      cell.className = className;
+    }
+
+    row.appendChild(cell);
+
+    return cell;
+  }
+
+  function addRow(body, values) {
+    const row = document.createElement("tr");
+
+    values.forEach(value => {
+      addCell(row, value);
+    });
+
+    body.appendChild(row);
+
+    return row;
+  }
+
+  function clearBody(id) {
+    $(id).replaceChildren();
+  }
+
+  function showPanel(id) {
+    $(id).classList.remove("hidden");
+  }
+
+  function hidePanel(id) {
+    $(id).classList.add("hidden");
+  }
+
+  function formatDate(date) {
+    if (!date) return "";
+
+    const parts = String(date).split("-");
+
+    if (parts.length !== 3) {
+      return String(date);
+    }
+
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
 
   function showError(error) {
     $("status").className = "status error";
+
     $("status").textContent =
       "LỖI: " + (error?.message || String(error));
+
+    console.error(error);
   }
+
+  function showSuccess(message) {
+    $("status").className = "status success";
+    $("status").textContent = message;
+  }
+
+  function showWarning(message) {
+    $("status").className = "status warning";
+    $("status").textContent = message;
+  }
+
+  // ---------------------------------------------
+  // HIEN THI THONG KE TONG QUAN
+  // ---------------------------------------------
+
+  function renderSummary(report) {
+    const summary = report.summary || {};
+
+    const metrics = [
+      {
+        label: "Phiên bản",
+        value: report.version
+      },
+      {
+        label: "Tổng lượt tạo mẫu",
+        value: report.sourceCreationCount
+      },
+      {
+        label: "Mẫu đủ điều kiện",
+        value: report.qualifiedPatternCount
+      },
+      {
+        label: "Lượt áp dụng tọa độ",
+        value: report.appliedPositionCount
+      },
+      {
+        label: "Lượt áp dụng hợp lệ",
+        value: report.validAppliedPositionCount
+      },
+      {
+        label: "Lượt vị trí khớp",
+        value: report.matchedPositionCount
+      },
+      {
+        label: "Lượt vị trí không khớp",
+        value: report.unmatchedPositionCount
+      },
+      {
+        label: "Nhóm cặp khớp",
+        value: report.matchedPairGroupCount
+      }
+    ];
+
+    const container = $("summaryContent");
+    container.replaceChildren();
+
+    const grid = document.createElement("div");
+    grid.className = "metric-grid";
+
+    metrics.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "metric";
+
+      addText(
+        card,
+        "div",
+        item.label,
+        "metric-label"
+      );
+
+      addText(
+        card,
+        "div",
+        item.value ?? 0,
+        "metric-value"
+      );
+
+      grid.appendChild(card);
+    });
+
+    container.appendChild(grid);
+
+    $("sourceDateInfo").textContent =
+      formatDate(report.sourceDate);
+
+    $("targetDateInfo").textContent =
+      formatDate(report.targetDate);
+
+    $("comparisonDateInfo").textContent =
+      formatDate(report.comparisonDate);
+
+    $("algorithmNote").textContent =
+      report.note || "";
+
+    showPanel("summary");
+  }
+
+  // ---------------------------------------------
+  // TAO CHI TIET MOT TOA DO NGAY N
+  // ---------------------------------------------
+
+  function formatSourcePosition(position) {
+    const left = position.left;
+    const right = position.right;
+
+    return [
+      `${left.prize} số ${left.numberIndex + 1}`,
+      `số ${left.number}`,
+      `chữ số thứ ${left.digitIndex + 1}`,
+      "→",
+      `${right.prize} số ${right.numberIndex + 1}`,
+      `số ${right.number}`,
+      `chữ số thứ ${right.digitIndex + 1}`,
+      `→ cặp ${position.pair}`,
+      `(${position.direction || ""})`
+    ].join(" | ");
+  }
+
+  function renderSource(report) {
+    const body = $("sourceBody");
+    clearBody("sourceBody");
+
+    const patterns = report.patterns || [];
+
+    patterns.forEach((group, index) => {
+      const row = document.createElement("tr");
+
+      addCell(row, index + 1);
+
+      addCell(
+        row,
+        group.pair,
+        "pair"
+      );
+
+      addCell(
+        row,
+        group.count
+      );
+
+      const detailCell = document.createElement("td");
+      detailCell.className = "detail";
+
+      (group.positions || []).forEach((position, i) => {
+        const line = document.createElement("div");
+
+        line.textContent =
+          `${i + 1}. ${formatSourcePosition(position)}`;
+
+        detailCell.appendChild(line);
+      });
+
+      row.appendChild(detailCell);
+      body.appendChild(row);
+    });
+
+    if (!patterns.length) {
+      addRow(body, [
+        "",
+        "Không có mẫu đạt ngưỡng",
+        "0",
+        "Không tìm thấy cặp đủ điều kiện."
+      ]);
+    }
+
+    showPanel("sourcePanel");
+  }
+
+  // ---------------------------------------------
+  // TAO CHI TIET MOT TOA DO DA AP DUNG
+  // ---------------------------------------------
+
+  function formatAppliedPosition(item) {
+    const left = item.appliedLeft;
+    const right = item.appliedRight;
+
+    if (!left || !right) {
+      return "Không có thông tin tọa độ áp dụng.";
+    }
+
+    const leftDigit = left.number?.[left.digitIndex] ?? "?";
+    const rightDigit = right.number?.[right.digitIndex] ?? "?";
+
+    return [
+      `${left.prize} số ${left.numberIndex + 1}`,
+      `${left.number}`,
+      `vị trí ${left.digitIndex + 1}`,
+      `chữ số ${leftDigit}`,
+      "→",
+      `${right.prize} số ${right.numberIndex + 1}`,
+      `${right.number}`,
+      `vị trí ${right.digitIndex + 1}`,
+      `chữ số ${rightDigit}`,
+      `→ ${item.appliedPair || "Không hợp lệ"}`
+    ].join(" | ");
+  }
+
+  function renderApplied(report) {
+    const body = $("targetBody");
+    clearBody("targetBody");
+
+    const applied = report.applied || [];
+
+    applied.forEach((item, index) => {
+      const row = document.createElement("tr");
+
+      addCell(row, index + 1);
+
+      addCell(
+        row,
+        item.sourcePair || item.sourceCanonical,
+        "pair"
+      );
+
+      addCell(
+        row,
+        item.appliedPair || "Không tạo được",
+        "pair"
+      );
+
+      const regionCell = document.createElement("td");
+
+      regionCell.textContent =
+        item.regionId || "";
+
+      const regionTag = document.createElement("span");
+
+      regionTag.className =
+        item.regionType === "red"
+          ? "tag tag-red"
+          : "tag tag-black";
+
+      regionTag.textContent =
+        item.regionType === "red"
+          ? "VÙNG ĐỎ"
+          : "VÙNG ĐEN";
+
+      regionCell.appendChild(document.createTextNode(" "));
+      regionCell.appendChild(regionTag);
+
+      row.appendChild(regionCell);
+
+      addCell(
+        row,
+        formatAppliedPosition(item),
+        "detail"
+      );
+
+      addCell(
+        row,
+        item.status || "",
+        item.status === "OK"
+          ? "matched"
+          : "unmatched"
+      );
+
+      body.appendChild(row);
+    });
+
+    if (!applied.length) {
+      addRow(body, [
+        "",
+        "",
+        "",
+        "",
+        "Không có tọa độ được áp dụng.",
+        ""
+      ]);
+    }
+
+    showPanel("targetPanel");
+  }
+
+  // ---------------------------------------------
+  // HIEN THI CAC KET QUA THUC TE KHOP
+  // ---------------------------------------------
+
+  function formatMatchedResults(results) {
+    if (!Array.isArray(results) || !results.length) {
+      return "Không có kết quả khớp.";
+    }
+
+    return results.map(result => {
+      return [
+        `${result.prize}`,
+        `số ${result.numberIndex + 1}`,
+        `${result.number}`,
+        `đuôi ${result.tail}`
+      ].join(" | ");
+    }).join("\n");
+  }
+
+  function formatMatchedPosition(item) {
+    const left = item.appliedLeft;
+    const right = item.appliedRight;
+
+    if (!left || !right) {
+      return "Không có thông tin tọa độ.";
+    }
+
+    return [
+      `${left.prize} số ${left.numberIndex + 1}`,
+      `vị trí ${left.digitIndex + 1}`,
+      `${right.prize} số ${right.numberIndex + 1}`,
+      `vị trí ${right.digitIndex + 1}`,
+      `cặp ${item.appliedPair}`
+    ].join(" | ");
+  }
+
+  function renderComparison(report) {
+    const matchedBody = $("matchedBody");
+    const unmatchedBody = $("unmatchedBody");
+
+    clearBody("matchedBody");
+    clearBody("unmatchedBody");
+
+    const matchedGroups = report.matchedGroups || [];
+    const unmatched = report.unmatched || [];
+
+    matchedGroups.forEach((group, index) => {
+      const row = document.createElement("tr");
+
+      addCell(row, index + 1);
+
+      addCell(
+        row,
+        group.pair,
+        "pair matched"
+      );
+
+      addCell(
+        row,
+        group.count
+      );
+
+      addCell(
+        row,
+        formatMatchedResults(group.matchedResults),
+        "detail"
+      );
+
+      const detailCell = document.createElement("td");
+      detailCell.className = "detail";
+
+      (group.positions || []).forEach((item, i) => {
+        addText(
+          detailCell,
+          "div",
+          `${i + 1}. ${formatMatchedPosition(item)}`
+        );
+      });
+
+      row.appendChild(detailCell);
+      matchedBody.appendChild(row);
+    });
+
+    if (!matchedGroups.length) {
+      addRow(matchedBody, [
+        "",
+        "Không có cặp khớp",
+        "0",
+        "Không có kết quả thực tế trùng.",
+        ""
+      ]);
+    }
+
+    unmatched.forEach((item, index) => {
+      const row = document.createElement("tr");
+
+      addCell(row, index + 1);
+
+      addCell(
+        row,
+        item.appliedPair || "",
+        "unmatched"
+      );
+
+      addCell(
+        row,
+        item.regionId || ""
+      );
+
+      addCell(
+        row,
+        formatMatchedPosition(item),
+        "detail"
+      );
+
+      unmatchedBody.appendChild(row);
+    });
+
+    if (!unmatched.length) {
+      addRow(unmatchedBody, [
+        "",
+        "Không có cặp không khớp",
+        "",
+        ""
+      ]);
+    }
+
+    showPanel("comparisonPanel");
+  }
+
+  // ---------------------------------------------
+  // HIEN THI DUOI THUC TE NGAY N
+  // ---------------------------------------------
+
+  function renderActualTails(report) {
+    const body = $("actualBody");
+    clearBody("actualBody");
+
+    const actualTails = report.actualTails || [];
+
+    actualTails.forEach((item, index) => {
+      addRow(body, [
+        item.prize,
+        item.numberIndex + 1,
+        item.number,
+        item.tail
+      ]);
+    });
+
+    if (!actualTails.length) {
+      addRow(body, [
+        "",
+        "",
+        "",
+        "Không có dữ liệu đuôi."
+      ]);
+    }
+
+    showPanel("actualPanel");
+  }
+
+  // ---------------------------------------------
+  // AN KHI CHUA CHAY HOAC CO LOI
+  // ---------------------------------------------
+
+  function hideResults() {
+    [
+      "summary",
+      "sourcePanel",
+      "targetPanel",
+      "comparisonPanel",
+      "actualPanel",
+      "jsonPanel"
+    ].forEach(hidePanel);
+  }
+
+  // ---------------------------------------------
+  // CHAY THUAT TOAN
+  // ---------------------------------------------
 
   $("runButton").addEventListener("click", () => {
     try {
       const algorithm = window.XSMBAlgorithm;
 
-      if (!algorithm || typeof algorithm.analyze !== "function") {
+      if (
+        !algorithm ||
+        typeof algorithm.analyze !== "function"
+      ) {
         throw new Error(
           "Không tải được algorithm.js hoặc không tìm thấy hàm analyze()."
         );
       }
 
-      const source = algorithm.TEST_DATA["2026-10-23"];
-      const target = algorithm.TEST_DATA["2026-10-22"];
+      const source =
+        algorithm.TEST_DATA["2026-10-23"];
 
-      if (!source || !target) {
-        throw new Error("Không tìm thấy dữ liệu ngày nguồn hoặc ngày áp dụng.");
+      const previous =
+        algorithm.TEST_DATA["2026-10-22"];
+
+      if (!source || !previous) {
+        throw new Error(
+          "Không tìm thấy dữ liệu ngày N hoặc ngày N-1."
+        );
       }
 
-      const report = algorithm.analyze(source, target);
+      // source = ngay N
+      // previous = ngay N-1
+      const report = algorithm.analyze(
+        source,
+        previous
+      );
 
-      $("summaryContent").textContent =
-        `Phiên bản: ${report.version}\n` +
-        `Ngày nguồn: ${report.sourceDate}\n` +
-        `Ngày áp dụng: ${report.targetDate}\n` +
-        `Số lượt tạo cặp: ${report.sourceCreationCount}\n` +
-        `Số mẫu đủ điều kiện: ${report.qualifiedPatternCount}\n` +
-        `Ghi chú: ${report.note}`;
-
-      $("jsonOutput").textContent = JSON.stringify(report, null, 2);
-
-      for (const id of [
-        "summary",
-        "jsonPanel"
-      ]) {
-        $(id).classList.remove("hidden");
+      if (!report || !Array.isArray(report.patterns)) {
+        throw new Error(
+          "Kết quả thuật toán không đúng cấu trúc."
+        );
       }
 
-      $("sourcePanel").classList.add("hidden");
-      $("targetPanel").classList.add("hidden");
+      lastReport = report;
 
-      $("status").className = "status success";
-      $("status").textContent =
-        "Đã chạy thuật toán. Dữ liệu vẫn là dữ liệu thử nghiệm, chưa xác minh với nguồn thực tế.";
+      // Tong quan
+      renderSummary(report);
+
+      // A. Mau ngay N
+      renderSource(report);
+
+      // B. Ap dung toa do sang ngay N-1
+      renderApplied(report);
+
+      // C. Doi chieu voi ngay N
+      renderComparison(report);
+
+      // D. Duoi thuc te ngay N
+      renderActualTails(report);
+
+      // E. JSON
+      $("jsonOutput").textContent =
+        JSON.stringify(report, null, 2);
+
+      showPanel("jsonPanel");
+
+      showSuccess(
+        "Đã chạy thuật toán thành công. " +
+        "Đã hiển thị mẫu, tọa độ áp dụng và kết quả đối chiếu. " +
+        "Lưu ý: dữ liệu hiện tại là dữ liệu thử nghiệm."
+      );
+
+      console.log(
+        "XSMB Algorithm Report:",
+        report
+      );
+
     } catch (error) {
+      hideResults();
       showError(error);
-      console.error(error);
     }
   });
+
+  // ---------------------------------------------
+  // SAO CHEP JSON
+  // ---------------------------------------------
 
   $("copyButton").addEventListener("click", async () => {
+    if (!lastReport) {
+      showWarning("Chưa có dữ liệu JSON để sao chép.");
+      return;
+    }
+
+    const json = JSON.stringify(
+      lastReport,
+      null,
+      2
+    );
+
     try {
-      await navigator.clipboard.writeText($("jsonOutput").textContent);
-      $("status").className = "status success";
-      $("status").textContent = "Đã sao chép JSON.";
+      await navigator.clipboard.writeText(json);
+
+      showSuccess("Đã sao chép toàn bộ JSON.");
+
     } catch (error) {
-      showError(new Error(
-        "Không thể sao chép tự động. Hãy chọn và sao chép JSON thủ công."
-      ));
+      showWarning(
+        "Không thể sao chép tự động. " +
+        "Hãy chọn nội dung JSON và sao chép thủ công."
+      );
     }
   });
+
+})();
 </script>
+
 </body>
 </html>
