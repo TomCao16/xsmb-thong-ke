@@ -206,6 +206,38 @@
       padding: 6px 0;
       font-weight: 600;
     }
+    
+.part2-coordinate-details {
+  display: inline-block;
+}
+
+.part2-coordinate-details summary {
+  cursor: pointer;
+  color: #175cd3;
+  text-decoration: underline;
+  font-size: 16px;
+  padding: 4px 8px;
+}
+
+.part2-coordinate-details[open] {
+  display: block;
+  min-width: 250px;
+}
+
+.part2-coordinate-details .part2-position-list {
+  margin-top: 10px;
+  text-align: left;
+}
+
+.part2-position {
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #d8d8d8;
+  border-radius: 6px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
   </style>
 </head>
 
@@ -960,6 +992,7 @@ async function readWorker(date) {
   // --------------------------------------------------
 
   
+
 function renderPart2(report) {
   const stageBody = document.getElementById("part2StageBody");
   const summaryBox = document.getElementById("part2Summary");
@@ -970,7 +1003,6 @@ function renderPart2(report) {
     return;
   }
 
-  // Mã hóa nội dung trước khi đưa vào HTML.
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
       "&": "&amp;",
@@ -981,7 +1013,6 @@ function renderPart2(report) {
     })[char]);
   }
 
-  // Hiển thị tên giải.
   function prizeName(prize) {
     const names = {
       DB: "Đặc biệt",
@@ -997,14 +1028,11 @@ function renderPart2(report) {
     return names[prize] || prize || "Không rõ";
   }
 
-  // Hiển thị một tọa độ nguồn và tọa độ đã áp dụng.
   function formatCoordinate(source, applied) {
     if (!source) return "Không có tọa độ";
 
     const prize = prizeName(source.prize);
 
-    // Các chỉ số trong thuật toán là chỉ số mảng JavaScript,
-    // vì vậy cộng 1 để hiển thị vị trí bắt đầu từ 1.
     const numberPosition = Number.isInteger(source.numberIndex)
       ? source.numberIndex + 1
       : "?";
@@ -1014,14 +1042,10 @@ function renderPart2(report) {
       : "?";
 
     const sourceNumber =
-      source.number ??
-      source.sourceValue ??
-      "";
+      source.number ?? source.sourceValue ?? "";
 
     const appliedNumber =
-      applied?.number ??
-      applied?.sourceValue ??
-      "";
+      applied?.number ?? applied?.sourceValue ?? "";
 
     let result =
       `${prize} – ô số ${numberPosition} – chữ số ${digitPosition}`;
@@ -1037,7 +1061,6 @@ function renderPart2(report) {
     return escapeHtml(result);
   }
 
-  // Hiển thị một vị trí tạo cặp.
   function renderPosition(position, index) {
     const left = formatCoordinate(
       position.left,
@@ -1071,13 +1094,11 @@ function renderPart2(report) {
         <div><strong>Vị trí ${index + 1}</strong></div>
 
         <div>
-          <strong>Tọa độ trái:</strong>
-          ${left}
+          <strong>Tọa độ trái:</strong> ${left}
         </div>
 
         <div>
-          <strong>Tọa độ phải:</strong>
-          ${right}
+          <strong>Tọa độ phải:</strong> ${right}
         </div>
 
         <div>
@@ -1098,9 +1119,7 @@ function renderPart2(report) {
     `;
   }
 
-  // ==============================
   // A. BẢNG QUÁ TRÌNH 4 GIAI ĐOẠN
-  // ==============================
 
   const stages = Array.isArray(report.stages)
     ? report.stages
@@ -1118,9 +1137,7 @@ function renderPart2(report) {
     </tr>
   `).join("");
 
-  // ==============================
   // B. TỔNG HỢP KẾT QUẢ
-  // ==============================
 
   const summary = report.summary || {};
 
@@ -1164,9 +1181,7 @@ function renderPart2(report) {
     </div>
   `;
 
-  // ==============================
   // C. DANH SÁCH CẶP CUỐI CÙNG
-  // ==============================
 
   const finalGroups = Array.isArray(report.finalGroups)
     ? report.finalGroups
@@ -1194,26 +1209,32 @@ function renderPart2(report) {
         ).join("")
       : "Không có tọa độ được lưu.";
 
+    const count = Number(
+      group.matchedPositions ?? positions.length
+    );
+
     return `
       <tr>
-        <td><strong>${escapeHtml(group.canonical || group.pair)}</strong></td>
-
         <td>
-          <strong>${escapeHtml(
-            group.matchedPositions ?? positions.length
-          )}</strong>
+          <strong>${escapeHtml(group.canonical || group.pair)}</strong>
         </td>
 
         <td>
-          <details>
-            <summary>
-              Xem ${positions.length} tọa độ còn khớp
+          <details class="part2-coordinate-details">
+            <summary title="Bấm để xem tọa độ còn khớp">
+              <strong>${escapeHtml(count)}</strong>
             </summary>
 
             <div class="part2-position-list">
               ${positionHtml}
             </div>
           </details>
+        </td>
+
+        <td>
+          ${positions.length > 0
+            ? "Bấm vào số để xem tọa độ"
+            : "Không có tọa độ"}
         </td>
       </tr>
     `;
