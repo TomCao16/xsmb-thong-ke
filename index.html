@@ -180,6 +180,32 @@
       .panel { padding: 13px; }
       h1 { font-size: 22px; }
     }
+        .part2-position-list {
+      margin-top: 10px;
+    }
+
+    .part2-position {
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #d8d8d8;
+      border-radius: 6px;
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+    }
+
+    .part2-position strong {
+      font-weight: 600;
+    }
+
+    .part2-position details,
+    .part2-position-list summary {
+      cursor: pointer;
+    }
+
+    .part2-position-list summary {
+      padding: 6px 0;
+      font-weight: 600;
+    }
   </style>
 </head>
 
@@ -933,93 +959,266 @@ async function readWorker(date) {
   // PHAN 2 - HIEN THI CHUOI DOI CHIEU 5 NGAY
   // --------------------------------------------------
 
-  function renderPart2(report) {
-    const stageBody = $("part2StageBody");
-    const summary = $("part2Summary");
-    const finalBody = $("part2FinalBody");
+  
+function renderPart2(report) {
+  const stageBody = document.getElementById("part2StageBody");
+  const summaryBox = document.getElementById("part2Summary");
+  const finalBody = document.getElementById("part2FinalBody");
 
-    stageBody.replaceChildren();
-    summary.replaceChildren();
-    finalBody.replaceChildren();
+  if (!stageBody || !summaryBox || !finalBody) {
+    console.error("Không tìm thấy khu vực hiển thị Phần 2.");
+    return;
+  }
 
-    // Bảng 4 giai đoạn.
-    report.stages.forEach(stage => {
-      const row = document.createElement("tr");
+  // Mã hóa nội dung trước khi đưa vào HTML.
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
+  }
 
-      addCell(row, `Giai đoạn ${stage.stage}`);
-      addCell(row, formatDate(stage.targetDate));
-      addCell(row, formatDate(stage.sourceDate));
-      addCell(row, stage.inputPatternCount);
-      addCell(row, stage.appliedPositionCount);
-      addCell(row, stage.matchedPositionCount, "matched");
-      addCell(row, stage.matchedPairGroupCount);
+  // Hiển thị tên giải.
+  function prizeName(prize) {
+    const names = {
+      DB: "Đặc biệt",
+      G1: "Giải nhất",
+      G2: "Giải nhì",
+      G3: "Giải ba",
+      G4: "Giải tư",
+      G5: "Giải năm",
+      G6: "Giải sáu",
+      G7: "Giải bảy"
+    };
 
-      stageBody.appendChild(row);
-    });
+    return names[prize] || prize || "Không rõ";
+  }
 
-    // Các chỉ số tổng quan Phần 2.
-    const metrics = [
-      ["Phiên bản", report.version],
-      ["Ngày tìm mẫu N", formatDate(report.sourceDate)],
-      ["Số mẫu ban đầu", report.initialPatternCount],
-      ["Nhóm còn lại giai đoạn 1", report.summary.stage1Groups],
-      ["Nhóm còn lại giai đoạn 2", report.summary.stage2Groups],
-      ["Nhóm còn lại giai đoạn 3", report.summary.stage3Groups],
-      ["Nhóm còn lại giai đoạn 4", report.summary.stage4Groups],
-      ["Tổng nhóm cuối cùng", report.summary.finalPairGroups],
-      ["Vị trí khớp cuối cùng", report.summary.finalMatchedPositions]
-    ];
+  // Hiển thị một tọa độ nguồn và tọa độ đã áp dụng.
+  function formatCoordinate(source, applied) {
+    if (!source) return "Không có tọa độ";
 
-    metrics.forEach(item => {
-      const card = document.createElement("div");
-      card.className = "metric";
+    const prize = prizeName(source.prize);
 
-      addText(card, "div", item[0], "metric-label");
-      addText(card, "div", item[1], "metric-value");
+    // Các chỉ số trong thuật toán là chỉ số mảng JavaScript,
+    // vì vậy cộng 1 để hiển thị vị trí bắt đầu từ 1.
+    const numberPosition = Number.isInteger(source.numberIndex)
+      ? source.numberIndex + 1
+      : "?";
 
-      summary.appendChild(card);
-    });
+    const digitPosition = Number.isInteger(source.digitIndex)
+      ? source.digitIndex + 1
+      : "?";
 
-    // Bảng các cặp còn lại sau giai đoạn 4.
-    report.finalGroups.forEach((group, index) => {
-      const row = document.createElement("tr");
-      const canonical = group.canonical;
+    const sourceNumber =
+      source.number ??
+      source.sourceValue ??
+      "";
 
-      addCell(row, index + 1);
-      addCell(row, canonical, "pair");
+    const appliedNumber =
+      applied?.number ??
+      applied?.sourceValue ??
+      "";
 
-      // Tìm số vị trí khớp của cùng cặp ở từng giai đoạn.
-      for (const stage of report.stages) {
-        const previousGroup = stage.matchedGroups.find(
-          item => item.canonical === canonical
-        );
+    let result =
+      `${prize} – ô số ${numberPosition} – chữ số ${digitPosition}`;
 
-        addCell(
-          row,
-          previousGroup ? previousGroup.matchedPositions : 0
-        );
-      }
-
-      // Số vị trí còn lại sau giai đoạn 4.
-      addCell(row, group.positions.length, "matched");
-
-      finalBody.appendChild(row);
-    });
-
-    if (!report.finalGroups.length) {
-      addRow(finalBody, [
-        "",
-        "Không có cặp còn đạt điều kiện sau 4 giai đoạn",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ]);
+    if (sourceNumber !== "") {
+      result += ` – số nguồn: ${sourceNumber}`;
     }
 
-    showPanel("part2Panel");
+    if (appliedNumber !== "") {
+      result += ` – số áp dụng: ${appliedNumber}`;
+    }
+
+    return escapeHtml(result);
   }
+
+  // Hiển thị một vị trí tạo cặp.
+  function renderPosition(position, index) {
+    const left = formatCoordinate(
+      position.left,
+      position.appliedLeft
+    );
+
+    const right = formatCoordinate(
+      position.right,
+      position.appliedRight
+    );
+
+    const sourcePair = position.sourcePair || "";
+    const appliedPair = position.appliedPair || "";
+
+    const matchedResults = Array.isArray(position.matchedResults)
+      ? position.matchedResults
+      : [];
+
+    const resultText = matchedResults.length
+      ? matchedResults.map(result => {
+          const prize = escapeHtml(prizeName(result.prize));
+          const number = escapeHtml(result.number || "");
+          const tail = escapeHtml(result.tail || "");
+
+          return `${prize}: ${number} (đuôi ${tail})`;
+        }).join("<br>")
+      : "Không có thông tin kết quả đối chiếu";
+
+    return `
+      <div class="part2-position">
+        <div><strong>Vị trí ${index + 1}</strong></div>
+
+        <div>
+          <strong>Tọa độ trái:</strong>
+          ${left}
+        </div>
+
+        <div>
+          <strong>Tọa độ phải:</strong>
+          ${right}
+        </div>
+
+        <div>
+          <strong>Cặp mẫu ngày nguồn:</strong>
+          ${escapeHtml(sourcePair)}
+        </div>
+
+        <div>
+          <strong>Cặp tạo ra:</strong>
+          ${escapeHtml(appliedPair)}
+        </div>
+
+        <div>
+          <strong>Kết quả thực tế khớp:</strong>
+          ${resultText}
+        </div>
+      </div>
+    `;
+  }
+
+  // ==============================
+  // A. BẢNG QUÁ TRÌNH 4 GIAI ĐOẠN
+  // ==============================
+
+  const stages = Array.isArray(report.stages)
+    ? report.stages
+    : [];
+
+  stageBody.innerHTML = stages.map(stage => `
+    <tr>
+      <td>${escapeHtml(stage.stage)}</td>
+      <td>${escapeHtml(stage.sourceDate)}</td>
+      <td>${escapeHtml(stage.targetDate)}</td>
+      <td>${escapeHtml(stage.inputPatternCount)}</td>
+      <td>${escapeHtml(stage.appliedPositionCount)}</td>
+      <td>${escapeHtml(stage.matchedPositionCount)}</td>
+      <td>${escapeHtml(stage.matchedPairGroupCount)}</td>
+    </tr>
+  `).join("");
+
+  // ==============================
+  // B. TỔNG HỢP KẾT QUẢ
+  // ==============================
+
+  const summary = report.summary || {};
+
+  summaryBox.innerHTML = `
+    <div><strong>Phiên bản:</strong> ${escapeHtml(report.version)}</div>
+    <div><strong>Ngày bắt đầu N:</strong> ${escapeHtml(report.sourceDate)}</div>
+    <div><strong>Chuỗi ngày:</strong> ${escapeHtml(
+      Array.isArray(report.dates) ? report.dates.join(" → ") : ""
+    )}</div>
+
+    <hr>
+
+    <div><strong>Số mẫu ban đầu:</strong>
+      ${escapeHtml(summary.initialPatterns ?? 0)}
+    </div>
+
+    <div><strong>Số nhóm khớp giai đoạn 1:</strong>
+      ${escapeHtml(summary.stage1Groups ?? 0)}
+    </div>
+
+    <div><strong>Số nhóm khớp giai đoạn 2:</strong>
+      ${escapeHtml(summary.stage2Groups ?? 0)}
+    </div>
+
+    <div><strong>Số nhóm khớp giai đoạn 3:</strong>
+      ${escapeHtml(summary.stage3Groups ?? 0)}
+    </div>
+
+    <div><strong>Số nhóm khớp giai đoạn 4:</strong>
+      ${escapeHtml(summary.stage4Groups ?? 0)}
+    </div>
+
+    <hr>
+
+    <div><strong>Tổng cặp cuối cùng:</strong>
+      ${escapeHtml(summary.finalPairGroups ?? 0)}
+    </div>
+
+    <div><strong>Tổng vị trí còn khớp:</strong>
+      ${escapeHtml(summary.finalMatchedPositions ?? 0)}
+    </div>
+  `;
+
+  // ==============================
+  // C. DANH SÁCH CẶP CUỐI CÙNG
+  // ==============================
+
+  const finalGroups = Array.isArray(report.finalGroups)
+    ? report.finalGroups
+    : [];
+
+  if (finalGroups.length === 0) {
+    finalBody.innerHTML = `
+      <tr>
+        <td colspan="3">
+          Không có cặp nào còn vị trí khớp sau 4 giai đoạn.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  finalBody.innerHTML = finalGroups.map(group => {
+    const positions = Array.isArray(group.positions)
+      ? group.positions
+      : [];
+
+    const positionHtml = positions.length
+      ? positions.map((position, index) =>
+          renderPosition(position, index)
+        ).join("")
+      : "Không có tọa độ được lưu.";
+
+    return `
+      <tr>
+        <td><strong>${escapeHtml(group.canonical || group.pair)}</strong></td>
+
+        <td>
+          <strong>${escapeHtml(
+            group.matchedPositions ?? positions.length
+          )}</strong>
+        </td>
+
+        <td>
+          <details>
+            <summary>
+              Xem ${positions.length} tọa độ còn khớp
+            </summary>
+
+            <div class="part2-position-list">
+              ${positionHtml}
+            </div>
+          </details>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
 
 
   async function runAnalysis() {
