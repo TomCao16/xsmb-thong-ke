@@ -3,20 +3,7 @@
 
 /*
  * XSMB THONG KE
- * Algorithm version 4.0.0
- *
- * DATA INPUT:
- * {
- *   date: "YYYY-MM-DD",
- *   DB: ["....."],
- *   G1: ["....."],
- *   G2: [".....", "....."],
- *   G3: [".....", ...],
- *   G4: ["....", ...],
- *   G5: ["....", ...],
- *   G6: ["...", ...],
- *   G7: ["..", ...]
- * }
+ * Algorithm version 4.1.0
  *
  * Quy trinh:
  * 1. Tim mau tren ngay N.
@@ -24,7 +11,7 @@
  * 3. Chuyen nguyen toa do sang ngay N-1.
  * 4. Tao cap moi bang chu so ngay N-1.
  * 5. Doi chieu voi duoi DB den G7 ngay N.
- * 6. Chi hien thi cap khop; cap dao chieu duoc gom chung.
+ * 6. Nhom ket qua khop theo cap mau ngay N.
  *
  * Khong co TEST_DATA, khong tu tao du lieu thay the.
  */
@@ -32,7 +19,7 @@
 (function (root) {
   "use strict";
 
-  const VERSION = "4.0.0";
+  const VERSION = "4.1.0";
 
   const CONFIG = Object.freeze({
     minPositions: 6,
@@ -51,7 +38,6 @@
     "G4", "G5", "G6", "G7"
   ];
 
-  // Cac vung ghep duoc giu nguyen theo thiet ke 3.0.0.
   const REGION_CONFIG = [
     {
       id: "RED_DB_G1",
@@ -202,7 +188,6 @@
     };
   }
 
-  // Kiem tra dung so luong ket qua va do dai tung giai.
   function validateDay(day, label) {
     if (!day || typeof day !== "object") {
       throw new Error(`Dữ liệu ${label} không hợp lệ.`);
@@ -508,10 +493,24 @@
     return tails;
   }
 
-  // Chi gom va tra ve cac cap khop voi ket qua ngay N.
+  /*
+   * DOI CHIEU VA NHOM THEO CAP MAU NGAY N.
+   *
+   * Moi item trong matched la mot vi tri cua mau N
+   * da tao ra mot cap tren N-1 va cap do khop ket qua N.
+   *
+   * matchedGroups:
+   * - sourcePair: cap mau ngay N (gom cap dao chieu).
+   * - totalPositions: tong vi tri cua mau tren N.
+   * - appliedPositions: so vi tri da tao cap tren N-1.
+   * - matchedPositions: so vi tri tao cap khop ket qua N.
+   * - positions: chi tiet cac vi tri khop.
+   * - matchedResults: cac ket qua thuc te ngay N khop.
+   */
   function matchActualResults(applied, sourceDay) {
     const actualTails = collectActualTails(sourceDay);
     const matched = [];
+    const groups = new Map();
 
     for (const item of applied) {
       if (item.status !== "OK" || !item.appliedPair) continue;
@@ -523,39 +522,59 @@
         result.tail === pair || result.tail === reverse
       );
 
-      if (hits.length) {
-        matched.push({
-          ...item,
-          matchedResults: hits
-        });
-      }
-    }
+      if (!hits.length) continue;
 
-    // Nhom cap tao tren N-1 theo cap dao chieu.
-    const groups = new Map();
+      const matchedItem = {
+        ...item,
+        matchedResults: hits
+      };
 
-    for (const item of matched) {
-      const key = item.appliedCanonical;
+      matched.push(matchedItem);
+
+      // Nhom theo cap mau ngay N, khong nhom theo cap N-1.
+      const key = item.sourceCanonical;
 
       if (!groups.has(key)) {
         groups.set(key, {
           pair: key,
           canonical: key,
           positions: [],
-          sourcePairs: new Set(),
-          matchedResults: []
+          matchedResults: [],
+          totalPositions: 0,
+          appliedPositions: 0
         });
       }
 
       const group = groups.get(key);
-      group.positions.push(item);
-      group.sourcePairs.add(item.sourcePair);
-      group.matchedResults.push(...item.matchedResults);
+
+      group.positions.push(matchedItem);
+      group.matchedResults.push(...hits);
+    }
+
+    // Lay tong so vi tri mau va so vi tri ap dung tu toan bo applied.
+    const patternTotals = new Map();
+
+    for (const item of applied) {
+      const key = item.sourceCanonical;
+
+      if (!patternTotals.has(key)) {
+        patternTotals.set(key, {
+          totalPositions: 0,
+          appliedPositions: 0
+        });
+      }
+
+      const totals = patternTotals.get(key);
+      totals.totalPositions += 1;
+
+      if (item.status === "OK" && item.appliedPair) {
+        totals.appliedPositions += 1;
+      }
     }
 
     const matchedGroups = Array.from(groups.values()).map(group => {
       const uniqueResults = [];
-      const seen = new Set();
+      const seenResults = new Set();
 
       for (const result of group.matchedResults) {
         const signature = [
@@ -565,15 +584,23 @@
           result.tail
         ].join("|");
 
-        if (seen.has(signature)) continue;
-        seen.add(signature);
+        if (seenResults.has(signature)) continue;
+
+        seenResults.add(signature);
         uniqueResults.push(result);
       }
+
+      const totals = patternTotals.get(group.canonical) || {
+        totalPositions: 0,
+        appliedPositions: 0
+      };
 
       return {
         pair: group.pair,
         canonical: group.canonical,
-        sourcePairs: Array.from(group.sourcePairs).sort(),
+        totalPositions: totals.totalPositions,
+        appliedPositions: totals.appliedPositions,
+        matchedPositions: group.positions.length,
         positions: group.positions,
         matchedResults: uniqueResults
       };
@@ -608,6 +635,7 @@
 
     const expectedPrevious = new Date(`${sourceDay.date}T00:00:00`);
     expectedPrevious.setDate(expectedPrevious.getDate() - 1);
+
     const expectedPreviousDate = [
       expectedPrevious.getFullYear(),
       String(expectedPrevious.getMonth() + 1).padStart(2, "0"),
@@ -626,13 +654,13 @@
     // Buoc 1: Tim mau tren ngay N.
     const sourceCreations = createAllPairs(sourceDay, regions);
 
-    // Buoc 2: Loc mau theo nguong toi thieu 6 vi tri.
+    // Buoc 2: Loc mau theo nguong toi thieu.
     const patterns = groupCreations(sourceCreations, minPositions);
 
     // Buoc 3: Chuyen toa do mau sang ngay N-1.
     const applied = applyPatterns(patterns, previousDay);
 
-    // Buoc 4: Doi chieu cap tao ra voi duoi ket qua ngay N.
+    // Buoc 4: Doi chieu va nhom theo cap mau ngay N.
     const comparison = matchActualResults(applied, sourceDay);
 
     const validApplied = applied.filter(item => item.status === "OK");
@@ -665,7 +693,7 @@
       note:
         "Mẫu được tìm trên ngày N; giữ nguyên tọa độ để áp dụng sang ngày N−1; " +
         "cặp tạo trên N−1 được đối chiếu với đuôi DB đến G7 của ngày N. " +
-        "Chỉ hiển thị các cặp khớp."
+        "Phần C nhóm theo cặp mẫu ngày N và đếm số vị trí tạo cặp khớp."
     };
   }
 
