@@ -1108,11 +1108,9 @@ async function readWorker(date) {
         ""
       );
 
-      const reportPart2 = algorithm.analyzePart2(
-        days,
-        {
-          minSourcePositions: 6,
-          minMatchedPositions: 4
+      const reportPart2 = algorithm.analyzePart2(days, {
+  minSourcePositions: 1,
+  minMatchedPositions: 1
         }
       );
 
