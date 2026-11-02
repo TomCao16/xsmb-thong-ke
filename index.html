@@ -1333,6 +1333,14 @@ function renderPart2(report) {
   minMatchedPositions: 1
         }
       );
+      console.log(
+  "TOA DO THUC TE:",
+  JSON.stringify(
+    reportPart2.finalGroups[0]?.positions,
+    null,
+    2
+  )
+);
 console.log("CHI TIẾT FINAL GROUPS:", reportPart2.finalGroups);
 console.log("TỌA ĐỘ CẶP ĐẦU TIÊN:", reportPart2.finalGroups[0]?.positions);
       if (
