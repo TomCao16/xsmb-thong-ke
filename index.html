@@ -3,9 +3,8 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>XSMB Thống Kê - Thuật Toán 3.0.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XSMB Thống Kê</title>
 
   <style>
     * {
@@ -16,216 +15,220 @@
       margin: 0;
       padding: 20px;
       background: #f3f5f8;
-      color: #172033;
-      font-family: Arial, sans-serif;
+      color: #202939;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
     }
 
     main {
-      max-width: 1250px;
-      margin: auto;
+      max-width: 1500px;
+      margin: 0 auto;
     }
 
     h1 {
-      font-size: 25px;
-      margin-bottom: 8px;
+      margin: 0 0 8px;
+      font-size: 27px;
     }
 
     h2 {
-      font-size: 19px;
-      margin-top: 0;
+      margin: 0 0 14px;
+      font-size: 20px;
     }
 
     h3 {
+      margin: 18px 0 10px;
       font-size: 16px;
-      margin-top: 18px;
+    }
+
+    .muted,
+    .section-note {
+      color: #667085;
+      font-size: 13px;
     }
 
     .panel {
-      background: white;
-      border: 1px solid #dce2eb;
-      border-radius: 10px;
-      padding: 18px;
       margin: 16px 0;
+      padding: 18px;
+      background: #fff;
+      border: 1px solid #e1e6ef;
+      border-radius: 10px;
+      box-shadow: 0 2px 7px rgba(16, 24, 40, 0.04);
     }
 
-    button {
-      background: #1457c5;
-      color: white;
-      border: 0;
-      border-radius: 6px;
-      padding: 12px 18px;
-      cursor: pointer;
+    .toolbar {
+      display: flex;
+      align-items: end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    label {
+      font-size: 13px;
       font-weight: bold;
     }
 
-    button:hover {
-      background: #0d4299;
+    input[type="date"] {
+      min-width: 190px;
+      padding: 10px 12px;
+      border: 1px solid #cbd2df;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    button {
+      padding: 11px 17px;
+      border: 0;
+      border-radius: 6px;
+      background: #175cd3;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
     }
 
     button:disabled {
-      opacity: 0.6;
+      opacity: 0.55;
       cursor: not-allowed;
     }
 
-    .muted {
-      color: #667085;
-      font-size: 14px;
-      line-height: 1.5;
+    button.secondary {
+      background: #475467;
     }
 
     .status {
-      padding: 12px;
+      margin-top: 14px;
+      padding: 11px 13px;
       border-radius: 6px;
-      background: #eef4ff;
-      margin-top: 12px;
+      background: #f2f4f7;
+      color: #344054;
+      font-size: 13px;
       overflow-wrap: anywhere;
-      line-height: 1.5;
     }
 
-    .error {
-      background: #fff0f0;
-      color: #a40000;
+    .status.success {
+      background: #ecfdf3;
+      color: #067647;
     }
 
-    .success {
-      background: #eaf8ef;
-      color: #176534;
+    .status.error {
+      background: #fef3f2;
+      color: #b42318;
     }
 
-    .warning {
-      background: #fff7e6;
-      color: #8a5700;
+    .status.warning {
+      background: #fffaeb;
+      color: #b54708;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      padding: 13px;
+      background: #f8fafc;
+      border: 1px solid #e4e7ec;
+      border-radius: 7px;
+    }
+
+    .metric-label {
+      color: #667085;
+      font-size: 12px;
+    }
+
+    .metric-value {
+      margin-top: 5px;
+      font-size: 22px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
     }
 
     .table-wrap {
-      overflow-x: auto;
       width: 100%;
+      overflow-x: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 12px;
       font-size: 13px;
-      min-width: 650px;
     }
 
-    th, td {
-      border: 1px solid #dce2eb;
-      padding: 9px;
+    th,
+    td {
+      padding: 9px 10px;
+      border: 1px solid #e4e7ec;
       text-align: left;
       vertical-align: top;
       overflow-wrap: anywhere;
     }
 
     th {
-      background: #f0f3f8;
+      background: #f2f4f7;
       white-space: nowrap;
     }
 
-    .metric-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .metric {
-      background: #f5f7fb;
-      border: 1px solid #e1e6ef;
-      border-radius: 8px;
-      padding: 13px;
-    }
-
-    .metric-label {
-      color: #667085;
-      font-size: 12px;
-      margin-bottom: 7px;
-    }
-
-    .metric-value {
-      font-size: 23px;
-      font-weight: bold;
-      overflow-wrap: anywhere;
-    }
-
     .pair {
+      color: #175cd3;
       font-weight: bold;
-      font-size: 16px;
-      color: #1457c5;
+      font-size: 15px;
       white-space: nowrap;
     }
 
     .matched {
-      color: #168044;
+      color: #067647;
       font-weight: bold;
     }
 
-    .unmatched {
-      color: #b42318;
-      font-weight: bold;
+    .detail {
+      min-width: 250px;
+      line-height: 1.6;
+    }
+
+    .detail-line {
+      margin-bottom: 4px;
     }
 
     .tag {
       display: inline-block;
-      padding: 4px 7px;
-      border-radius: 5px;
-      background: #eef2f7;
-      font-size: 11px;
       margin: 2px;
+      padding: 3px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      white-space: nowrap;
     }
 
     .tag-red {
-      background: #fff0f0;
+      background: #fef3f2;
       color: #b42318;
     }
 
     .tag-black {
-      background: #e9edf3;
+      background: #f2f4f7;
       color: #344054;
     }
 
-    .tag-green {
-      background: #eaf8ef;
-      color: #176534;
-    }
-
-    .detail {
-      line-height: 1.65;
-      min-width: 240px;
-    }
-
-    .detail div {
-      margin-bottom: 4px;
+    pre {
+      max-height: 600px;
+      overflow: auto;
+      padding: 13px;
+      background: #f8fafc;
+      border: 1px solid #e4e7ec;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 12px;
     }
 
     .hidden {
       display: none !important;
-    }
-
-    .section-note {
-      color: #667085;
-      font-size: 13px;
-      line-height: 1.5;
-      margin-bottom: 10px;
-    }
-
-    pre {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      font-size: 12px;
-      background: #f7f8fa;
-      padding: 12px;
-      border-radius: 6px;
-      max-height: 650px;
-      overflow: auto;
-    }
-
-    .toolbar {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
     }
 
     @media (max-width: 600px) {
@@ -238,11 +241,7 @@
       }
 
       h1 {
-        font-size: 21px;
-      }
-
-      .metric-value {
-        font-size: 20px;
+        font-size: 22px;
       }
     }
   </style>
@@ -254,78 +253,52 @@
   <h1>Thống kê xổ số miền Bắc</h1>
 
   <p class="muted">
-    Dự án độc lập — kiểm thử thuật toán theo vị trí.
-    Phiên bản thuật toán 3.0.0.
+    Đọc dữ liệu từ nguồn ketqua16.net thông qua Worker.
+    Thuật toán phiên bản 4.0.0 — ngưỡng tối thiểu 6 vị trí.
   </p>
 
-  <!-- THONG TIN KIEM THU -->
+  <!-- CHON NGAY VA DOC WORKER -->
   <section class="panel">
-
-    <h2>Thông tin kiểm thử</h2>
-
-    <p>
-      Ngày tìm mẫu:
-      <strong id="sourceDateInfo">23/10/2026</strong>
-    </p>
-
-    <p>
-      Ngày áp dụng mẫu:
-      <strong id="targetDateInfo">22/10/2026</strong>
-    </p>
-
-    <p>
-      Ngày đối chiếu:
-      <strong id="comparisonDateInfo">23/10/2026</strong>
-    </p>
-
-    <p>
-      Điều kiện:
-      <strong>Ít nhất 5 lượt tạo thành.</strong>
-    </p>
-
-    <p class="muted">
-      Vùng đỏ: ghép mọi cặp vị trí trong cùng vùng.
-      Vùng đen: chỉ ghép hai chữ số liền kề trong từng số.
-      Không tự ý ghép ngoài vùng đã khai báo.
-    </p>
-
-    <p class="muted">
-      Quy trình: Ngày N tìm mẫu → ngày N−1 áp dụng tọa độ
-      → ngày N đối chiếu đuôi DB đến G7.
-    </p>
+    <h2>Chọn ngày thống kê</h2>
 
     <div class="toolbar">
-      <button id="runButton">CHẠY THUẬT TOÁN</button>
+      <div class="field">
+        <label for="selectedDate">Ngày N — ngày tìm mẫu và đối chiếu</label>
+        <input type="date" id="selectedDate" required>
+      </div>
+
+      <button id="runButton">ĐỌC NGUỒN VÀ CHẠY THUẬT TOÁN</button>
     </div>
 
     <div id="status" class="status">
-      Sẵn sàng. Nhấn “CHẠY THUẬT TOÁN”.
+      Chọn ngày cần thống kê, sau đó nhấn “ĐỌC NGUỒN VÀ CHẠY THUẬT TOÁN”.
     </div>
 
-  </section>
+    <p class="muted">
+      Nguồn dữ liệu duy nhất:
+      https://ketqua16.net/so-ket-qua
+    </p>
 
+    <p class="muted">
+      Worker:
+      https://xsmb-thong-ke-reader.czcaonguyen.workers.dev
+    </p>
+  </section>
 
   <!-- TONG QUAN -->
-  <section id="summary" class="panel hidden">
-
+  <section id="summaryPanel" class="panel hidden">
     <h2>Kết quả tổng quan</h2>
-
-    <div id="summaryContent"></div>
-
+    <div id="summaryContent" class="metric-grid"></div>
     <p id="algorithmNote" class="muted"></p>
-
   </section>
-
 
   <!-- A: MAU NGAY N -->
   <section id="sourcePanel" class="panel hidden">
-
     <h2>A. Mẫu tìm được trên ngày N</h2>
 
     <p class="section-note">
-      Chỉ hiển thị các cặp đạt ngưỡng tối thiểu 5 vị trí.
-      Mỗi dòng vị trí là một lần tạo cặp riêng biệt.
-      Cặp đảo chiều được nhóm chung.
+      Chỉ hiển thị các cặp đạt ít nhất 6 tọa độ khác nhau.
+      Cặp đảo chiều được nhóm chung; từng vị trí tạo cặp vẫn được giữ lại.
     </p>
 
     <div class="table-wrap">
@@ -338,23 +311,18 @@
             <th>Chi tiết từng vị trí</th>
           </tr>
         </thead>
-
         <tbody id="sourceBody"></tbody>
       </table>
     </div>
-
   </section>
 
-
-  <!-- B: AP DUNG NGAY N-1 -->
+  <!-- B: AP DUNG N-1 -->
   <section id="targetPanel" class="panel hidden">
-
     <h2>B. Áp dụng tọa độ sang ngày N−1</h2>
 
     <p class="section-note">
-      Mỗi tọa độ của mẫu ngày N được chuyển nguyên vẹn
-      sang ngày N−1. Cặp mới được tạo từ chữ số tại
-      các tọa độ tương ứng.
+      Giữ nguyên tọa độ của mẫu ngày N và lấy chữ số tại đúng
+      các tọa độ đó trên dữ liệu ngày N−1 để tạo cặp mới.
     </p>
 
     <div class="table-wrap">
@@ -369,26 +337,19 @@
             <th>Trạng thái</th>
           </tr>
         </thead>
-
         <tbody id="targetBody"></tbody>
       </table>
     </div>
-
   </section>
 
-
-  <!-- C: DOI CHIEU -->
+  <!-- C: CHI HIEN THI CAP KHOP -->
   <section id="comparisonPanel" class="panel hidden">
-
-    <h2>C. Đối chiếu với kết quả thực tế ngày N</h2>
+    <h2>C. Các cặp khớp với kết quả thực tế ngày N</h2>
 
     <p class="section-note">
-      Lấy hai số cuối của tất cả kết quả từ DB đến G7
-      trên ngày N. Cặp được tạo trên ngày N−1 chỉ được
-      giữ nếu trùng với đuôi thực tế, kể cả đảo chiều.
+      Chỉ hiển thị cặp tạo trên ngày N−1 có đuôi trùng với
+      kết quả thực tế DB đến G7 ngày N. Chấp nhận cả cặp đảo chiều.
     </p>
-
-    <h3>Các cặp khớp</h3>
 
     <div class="table-wrap">
       <table>
@@ -396,143 +357,76 @@
           <tr>
             <th>STT</th>
             <th>Cặp tạo trên N−1</th>
-            <th>Số lượt vị trí khớp</th>
+            <th>Cặp tạo trên ngày N</th>
             <th>Kết quả ngày N khớp</th>
-            <th>Chi tiết vị trí tạo cặp</th>
           </tr>
         </thead>
-
         <tbody id="matchedBody"></tbody>
       </table>
     </div>
-
-    <h3>Các cặp không khớp</h3>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>STT</th>
-            <th>Cặp tạo trên N−1</th>
-            <th>Vùng</th>
-            <th>Chi tiết vị trí</th>
-          </tr>
-        </thead>
-
-        <tbody id="unmatchedBody"></tbody>
-      </table>
-    </div>
-
   </section>
 
-
-  <!-- D: DUOI THUC TE -->
-  <section id="actualPanel" class="panel hidden">
-
-    <h2>D. Danh sách đuôi hai số thực tế ngày N</h2>
-
-    <p class="section-note">
-      Dữ liệu được lấy từ DB, G1, G2, G3, G4, G5, G6 và G7.
-      Đây là tập dữ liệu dùng để đối chiếu.
-    </p>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Giải</th>
-            <th>STT kết quả</th>
-            <th>Kết quả đầy đủ</th>
-            <th>Hai số cuối</th>
-          </tr>
-        </thead>
-
-        <tbody id="actualBody"></tbody>
-      </table>
-    </div>
-
-  </section>
-
-
-  <!-- E: JSON -->
+  <!-- JSON -->
   <section id="jsonPanel" class="panel hidden">
-
-    <h2>E. Dữ liệu kết quả JSON</h2>
+    <h2>D. Dữ liệu JSON kết quả</h2>
 
     <div class="toolbar">
-      <button id="copyButton">SAO CHÉP JSON</button>
+      <button id="copyButton" class="secondary">SAO CHÉP JSON</button>
     </div>
 
     <pre id="jsonOutput"></pre>
-
   </section>
 
 </main>
 
-
-<!-- NAP THUAT TOAN -->
 <script src="./algorithm.js"></script>
 
 <script>
 (function () {
   "use strict";
 
+  const WORKER_URL =
+    "https://xsmb-thong-ke-reader.czcaonguyen.workers.dev";
+
+  const EXPECTED_COUNTS = {
+    DB: 1,
+    G1: 1,
+    G2: 2,
+    G3: 6,
+    G4: 4,
+    G5: 6,
+    G6: 3,
+    G7: 4
+  };
+
+  const EXPECTED_LENGTHS = {
+    DB: 5,
+    G1: 5,
+    G2: 5,
+    G3: 5,
+    G4: 4,
+    G5: 4,
+    G6: 3,
+    G7: 2
+  };
+
+  const PRIZES = [
+    "DB", "G1", "G2", "G3",
+    "G4", "G5", "G6", "G7"
+  ];
+
   const $ = id => document.getElementById(id);
 
   let lastReport = null;
 
-  // ---------------------------------------------
-  // CAC HAM HIEN THI CO BAN
-  // ---------------------------------------------
+  // --------------------------------------------------
+  // CAC HAM GIAO DIEN
+  // --------------------------------------------------
 
-  function addText(parent, tag, value, className) {
-    const element = document.createElement(tag || "div");
-
-    element.textContent =
-      value === null || value === undefined
-        ? ""
-        : String(value);
-
-    if (className) {
-      element.className = className;
-    }
-
-    parent.appendChild(element);
-
-    return element;
-  }
-
-  function addCell(row, value, className) {
-    const cell = document.createElement("td");
-
-    cell.textContent =
-      value === null || value === undefined
-        ? ""
-        : String(value);
-
-    if (className) {
-      cell.className = className;
-    }
-
-    row.appendChild(cell);
-
-    return cell;
-  }
-
-  function addRow(body, values) {
-    const row = document.createElement("tr");
-
-    values.forEach(value => {
-      addCell(row, value);
-    });
-
-    body.appendChild(row);
-
-    return row;
-  }
-
-  function clearBody(id) {
-    $(id).replaceChildren();
+  function setStatus(message, type) {
+    const status = $("status");
+    status.className = "status" + (type ? " " + type : "");
+    status.textContent = message;
   }
 
   function showPanel(id) {
@@ -543,126 +437,312 @@
     $(id).classList.add("hidden");
   }
 
+  function hideResults() {
+    [
+      "summaryPanel",
+      "sourcePanel",
+      "targetPanel",
+      "comparisonPanel",
+      "jsonPanel"
+    ].forEach(hidePanel);
+  }
+
+  function clearBody(id) {
+    $(id).replaceChildren();
+  }
+
+  function addCell(row, value, className) {
+    const cell = document.createElement("td");
+    cell.textContent =
+      value === null || value === undefined ? "" : String(value);
+
+    if (className) cell.className = className;
+
+    row.appendChild(cell);
+    return cell;
+  }
+
+  function addRow(body, values) {
+    const row = document.createElement("tr");
+    values.forEach(value => addCell(row, value));
+    body.appendChild(row);
+    return row;
+  }
+
+  function addText(parent, tag, value, className) {
+    const element = document.createElement(tag || "div");
+    element.textContent =
+      value === null || value === undefined ? "" : String(value);
+
+    if (className) element.className = className;
+
+    parent.appendChild(element);
+    return element;
+  }
+
   function formatDate(date) {
     if (!date) return "";
 
     const parts = String(date).split("-");
-
-    if (parts.length !== 3) {
-      return String(date);
-    }
+    if (parts.length !== 3) return String(date);
 
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 
-  function showError(error) {
-    $("status").className = "status error";
+  function getPreviousDate(dateString) {
+    const date = new Date(`${dateString}T00:00:00`);
+    date.setDate(date.getDate() - 1);
 
-    $("status").textContent =
-      "LỖI: " + (error?.message || String(error));
-
-    console.error(error);
+    return [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0")
+    ].join("-");
   }
 
-  function showSuccess(message) {
-    $("status").className = "status success";
-    $("status").textContent = message;
+  // --------------------------------------------------
+  // CHUAN HOA DU LIEU WORKER
+  // --------------------------------------------------
+
+  function normalizeValue(value) {
+    if (value === null || value === undefined) return "";
+
+    if (typeof value === "object") {
+      if (value.number !== undefined) return String(value.number);
+      if (value.value !== undefined) return String(value.value);
+      if (value.result !== undefined) return String(value.result);
+      return "";
+    }
+
+    return String(value).trim().replace(/\s+/g, "");
   }
 
-  function showWarning(message) {
-    $("status").className = "status warning";
-    $("status").textContent = message;
-  }
+  /*
+   * Ho tro hai dang:
+   *
+   * 1. results la object:
+   *    { DB: [...], G1: [...], ... }
+   *
+   * 2. results la mang ban ghi:
+   *    [{ prize: "DB", number: "..." }, ...]
+   *
+   * Du lieu khong nhan dien duoc se bi tu choi,
+   * khong tu tao gia tri thay the.
+   */
 
-  // ---------------------------------------------
-  // HIEN THI THONG KE TONG QUAN
-  // ---------------------------------------------
+  function extractPrizeArrays(day, label) {
+    if (!day || typeof day !== "object") {
+      throw new Error(`${label}: dữ liệu ngày không hợp lệ.`);
+    }
 
-  function renderSummary(report) {
-    const summary = report.summary || {};
+    const rawResults = day.results || day;
 
-    const metrics = [
-      {
-        label: "Phiên bản",
-        value: report.version
-      },
-      {
-        label: "Tổng lượt tạo mẫu",
-        value: report.sourceCreationCount
-      },
-      {
-        label: "Mẫu đủ điều kiện",
-        value: report.qualifiedPatternCount
-      },
-      {
-        label: "Lượt áp dụng tọa độ",
-        value: report.appliedPositionCount
-      },
-      {
-        label: "Lượt áp dụng hợp lệ",
-        value: report.validAppliedPositionCount
-      },
-      {
-        label: "Lượt vị trí khớp",
-        value: report.matchedPositionCount
-      },
-      {
-        label: "Lượt vị trí không khớp",
-        value: report.unmatchedPositionCount
-      },
-      {
-        label: "Nhóm cặp khớp",
-        value: report.matchedPairGroupCount
+    const normalized = {
+      date: day.date
+    };
+
+    if (
+      rawResults &&
+      !Array.isArray(rawResults) &&
+      typeof rawResults === "object"
+    ) {
+      for (const prize of PRIZES) {
+        const values = rawResults[prize] ?? day[prize];
+
+        if (!Array.isArray(values)) {
+          throw new Error(`${label}: không tìm thấy mảng kết quả ${prize}.`);
+        }
+
+        normalized[prize] = values.map(normalizeValue);
       }
+
+      return normalized;
+    }
+
+    if (Array.isArray(rawResults)) {
+      const grouped = {};
+
+      for (const prize of PRIZES) grouped[prize] = [];
+
+      for (const item of rawResults) {
+        if (!item || typeof item !== "object") continue;
+
+        const prize = String(
+          item.prize || item.type || item.code || ""
+        ).toUpperCase();
+
+        if (!PRIZES.includes(prize)) continue;
+
+        const value = normalizeValue(
+          item.number ?? item.value ?? item.result
+        );
+
+        if (value) grouped[prize].push(value);
+      }
+
+      for (const prize of PRIZES) {
+        normalized[prize] = grouped[prize];
+      }
+
+      return normalized;
+    }
+
+    throw new Error(
+      `${label}: cấu trúc results của Worker không được nhận diện.`
+    );
+  }
+
+  function validateWorkerDay(day, label, expectedDate) {
+    if (!day || !day.date) {
+      throw new Error(`${label}: Worker không trả về ngày.`);
+    }
+
+    if (day.date !== expectedDate) {
+      throw new Error(
+        `${label}: sai ngày. Cần ${expectedDate}, nhận ${day.date}.`
+      );
+    }
+
+    for (const prize of PRIZES) {
+      const values = day[prize];
+
+      if (!Array.isArray(values)) {
+        throw new Error(`${label}: thiếu mảng ${prize}.`);
+      }
+
+      const expectedCount = EXPECTED_COUNTS[prize];
+      const expectedLength = EXPECTED_LENGTHS[prize];
+
+      if (values.length !== expectedCount) {
+        throw new Error(
+          `${label} ${prize}: cần ${expectedCount} kết quả, ` +
+          `nhận ${values.length}. Dừng phân tích để tránh sai dữ liệu.`
+        );
+      }
+
+      values.forEach((value, index) => {
+        const text = String(value);
+
+        if (!new RegExp(`^\\d{${expectedLength}}$`).test(text)) {
+          throw new Error(
+            `${label} ${prize}, kết quả ${index + 1}: ` +
+            `giá trị "${text}" không đủ ${expectedLength} chữ số.`
+          );
+        }
+      });
+    }
+
+    return true;
+  }
+
+  async function readWorker(date) {
+    const url =
+      `${WORKER_URL}/read?date=${encodeURIComponent(date)}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json"
+      },
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Worker trả về HTTP ${response.status}. Không thể đọc dữ liệu.`
+      );
+    }
+
+    let payload;
+
+    try {
+      payload = await response.json();
+    } catch (error) {
+      throw new Error("Worker không trả về JSON hợp lệ.");
+    }
+
+    if (!payload || payload.ok !== true) {
+      throw new Error(
+        payload?.error ||
+        payload?.message ||
+        "Worker báo không đọc được dữ liệu nguồn."
+      );
+    }
+
+    if (!payload.sourceDay || !payload.previousDay) {
+      throw new Error(
+        "JSON Worker thiếu sourceDay hoặc previousDay."
+      );
+    }
+
+    const sourceDay = extractPrizeArrays(
+      payload.sourceDay,
+      "Ngày N"
+    );
+
+    const previousDay = extractPrizeArrays(
+      payload.previousDay,
+      "Ngày N−1"
+    );
+
+    validateWorkerDay(sourceDay, "Ngày N", date);
+
+    const expectedPrevious = getPreviousDate(date);
+
+    validateWorkerDay(
+      previousDay,
+      "Ngày N−1",
+      expectedPrevious
+    );
+
+    return {
+      sourceDay,
+      previousDay,
+      workerVersion: payload.version || "Không rõ",
+      source: payload.source || ""
+    };
+  }
+
+  // --------------------------------------------------
+  // HIEN THI TONG QUAN
+  // --------------------------------------------------
+
+  function renderSummary(report, workerInfo) {
+    const items = [
+      ["Phiên bản thuật toán", report.version],
+      ["Phiên bản Worker", workerInfo.workerVersion],
+      ["Ngày tìm mẫu N", formatDate(report.sourceDate)],
+      ["Ngày áp dụng N−1", formatDate(report.targetDate)],
+      ["Ngưỡng tối thiểu", report.minPositions + " vị trí"],
+      ["Tổng lượt tạo mẫu", report.sourceCreationCount],
+      ["Số mẫu đủ điều kiện", report.qualifiedPatternCount],
+      ["Lượt áp dụng tọa độ", report.appliedPositionCount],
+      ["Lượt áp dụng hợp lệ", report.validAppliedPositionCount],
+      ["Lượt vị trí khớp", report.matchedPositionCount],
+      ["Nhóm cặp khớp", report.matchedPairGroupCount]
     ];
 
     const container = $("summaryContent");
     container.replaceChildren();
 
-    const grid = document.createElement("div");
-    grid.className = "metric-grid";
-
-    metrics.forEach(item => {
+    for (const item of items) {
       const card = document.createElement("div");
       card.className = "metric";
 
-      addText(
-        card,
-        "div",
-        item.label,
-        "metric-label"
-      );
+      addText(card, "div", item[0], "metric-label");
+      addText(card, "div", item[1], "metric-value");
 
-      addText(
-        card,
-        "div",
-        item.value ?? 0,
-        "metric-value"
-      );
+      container.appendChild(card);
+    }
 
-      grid.appendChild(card);
-    });
+    $("algorithmNote").textContent = report.note || "";
 
-    container.appendChild(grid);
-
-    $("sourceDateInfo").textContent =
-      formatDate(report.sourceDate);
-
-    $("targetDateInfo").textContent =
-      formatDate(report.targetDate);
-
-    $("comparisonDateInfo").textContent =
-      formatDate(report.comparisonDate);
-
-    $("algorithmNote").textContent =
-      report.note || "";
-
-    showPanel("summary");
+    showPanel("summaryPanel");
   }
 
-  // ---------------------------------------------
-  // TAO CHI TIET MOT TOA DO NGAY N
-  // ---------------------------------------------
+  // --------------------------------------------------
+  // A. MAU TIM TREN NGAY N
+  // --------------------------------------------------
 
   function formatSourcePosition(position) {
     const left = position.left;
@@ -676,8 +756,7 @@
       `${right.prize} số ${right.numberIndex + 1}`,
       `số ${right.number}`,
       `chữ số thứ ${right.digitIndex + 1}`,
-      `→ cặp ${position.pair}`,
-      `(${position.direction || ""})`
+      `→ cặp ${position.pair}`
     ].join(" | ");
   }
 
@@ -685,44 +764,33 @@
     const body = $("sourceBody");
     clearBody("sourceBody");
 
-    const patterns = report.patterns || [];
-
-    patterns.forEach((group, index) => {
+    report.patterns.forEach((group, index) => {
       const row = document.createElement("tr");
 
       addCell(row, index + 1);
+      addCell(row, group.pair, "pair");
+      addCell(row, group.count);
 
-      addCell(
-        row,
-        group.pair,
-        "pair"
-      );
+      const detail = document.createElement("td");
+      detail.className = "detail";
 
-      addCell(
-        row,
-        group.count
-      );
-
-      const detailCell = document.createElement("td");
-      detailCell.className = "detail";
-
-      (group.positions || []).forEach((position, i) => {
-        const line = document.createElement("div");
-
-        line.textContent =
-          `${i + 1}. ${formatSourcePosition(position)}`;
-
-        detailCell.appendChild(line);
+      group.positions.forEach((position, positionIndex) => {
+        addText(
+          detail,
+          "div",
+          `${positionIndex + 1}. ${formatSourcePosition(position)}`,
+          "detail-line"
+        );
       });
 
-      row.appendChild(detailCell);
+      row.appendChild(detail);
       body.appendChild(row);
     });
 
-    if (!patterns.length) {
+    if (!report.patterns.length) {
       addRow(body, [
         "",
-        "Không có mẫu đạt ngưỡng",
+        "Không có mẫu đạt ngưỡng 6 vị trí",
         "0",
         "Không tìm thấy cặp đủ điều kiện."
       ]);
@@ -731,31 +799,29 @@
     showPanel("sourcePanel");
   }
 
-  // ---------------------------------------------
-  // TAO CHI TIET MOT TOA DO DA AP DUNG
-  // ---------------------------------------------
+  // --------------------------------------------------
+  // B. AP DUNG TOA DO SANG NGAY N-1
+  // --------------------------------------------------
 
   function formatAppliedPosition(item) {
     const left = item.appliedLeft;
     const right = item.appliedRight;
 
     if (!left || !right) {
-      return "Không có thông tin tọa độ áp dụng.";
+      return "Không có thông tin tọa độ hợp lệ.";
     }
 
-    const leftDigit = left.number?.[left.digitIndex] ?? "?";
-    const rightDigit = right.number?.[right.digitIndex] ?? "?";
+    const leftDigit = left.number[left.digitIndex];
+    const rightDigit = right.number[right.digitIndex];
 
     return [
       `${left.prize} số ${left.numberIndex + 1}`,
       `${left.number}`,
-      `vị trí ${left.digitIndex + 1}`,
-      `chữ số ${leftDigit}`,
+      `vị trí ${left.digitIndex + 1} (${leftDigit})`,
       "→",
       `${right.prize} số ${right.numberIndex + 1}`,
       `${right.number}`,
-      `vị trí ${right.digitIndex + 1}`,
-      `chữ số ${rightDigit}`,
+      `vị trí ${right.digitIndex + 1} (${rightDigit})`,
       `→ ${item.appliedPair || "Không hợp lệ"}`
     ].join(" | ");
   }
@@ -764,65 +830,39 @@
     const body = $("targetBody");
     clearBody("targetBody");
 
-    const applied = report.applied || [];
-
-    applied.forEach((item, index) => {
+    report.applied.forEach((item, index) => {
       const row = document.createElement("tr");
 
       addCell(row, index + 1);
-
-      addCell(
-        row,
-        item.sourcePair || item.sourceCanonical,
-        "pair"
-      );
-
-      addCell(
-        row,
-        item.appliedPair || "Không tạo được",
-        "pair"
-      );
+      addCell(row, item.sourcePair || item.sourceCanonical, "pair");
+      addCell(row, item.appliedPair || "Không hợp lệ", "pair");
 
       const regionCell = document.createElement("td");
+      regionCell.textContent = item.regionId || "";
 
-      regionCell.textContent =
-        item.regionId || "";
+      const tag = document.createElement("span");
+      tag.className =
+        item.regionType === "red" ? "tag tag-red" : "tag tag-black";
 
-      const regionTag = document.createElement("span");
-
-      regionTag.className =
-        item.regionType === "red"
-          ? "tag tag-red"
-          : "tag tag-black";
-
-      regionTag.textContent =
-        item.regionType === "red"
-          ? "VÙNG ĐỎ"
-          : "VÙNG ĐEN";
+      tag.textContent =
+        item.regionType === "red" ? "VÙNG ĐỎ" : "VÙNG ĐEN";
 
       regionCell.appendChild(document.createTextNode(" "));
-      regionCell.appendChild(regionTag);
-
+      regionCell.appendChild(tag);
       row.appendChild(regionCell);
 
-      addCell(
-        row,
-        formatAppliedPosition(item),
-        "detail"
-      );
+      addCell(row, formatAppliedPosition(item), "detail");
 
       addCell(
         row,
-        item.status || "",
-        item.status === "OK"
-          ? "matched"
-          : "unmatched"
+        item.status,
+        item.status === "OK" ? "matched" : ""
       );
 
       body.appendChild(row);
     });
 
-    if (!applied.length) {
+    if (!report.applied.length) {
       addRow(body, [
         "",
         "",
@@ -836,292 +876,219 @@
     showPanel("targetPanel");
   }
 
-  // ---------------------------------------------
-  // HIEN THI CAC KET QUA THUC TE KHOP
-  // ---------------------------------------------
+  // --------------------------------------------------
+  // C. CHI HIEN THI CAC CAP KHOP
+  // --------------------------------------------------
 
   function formatMatchedResults(results) {
     if (!Array.isArray(results) || !results.length) {
-      return "Không có kết quả khớp.";
+      return "";
     }
 
     return results.map(result => {
       return [
-        `${result.prize}`,
+        result.prize,
         `số ${result.numberIndex + 1}`,
-        `${result.number}`,
+        result.number,
         `đuôi ${result.tail}`
       ].join(" | ");
     }).join("\n");
   }
 
-  function formatMatchedPosition(item) {
-    const left = item.appliedLeft;
-    const right = item.appliedRight;
-
-    if (!left || !right) {
-      return "Không có thông tin tọa độ.";
-    }
-
-    return [
-      `${left.prize} số ${left.numberIndex + 1}`,
-      `vị trí ${left.digitIndex + 1}`,
-      `${right.prize} số ${right.numberIndex + 1}`,
-      `vị trí ${right.digitIndex + 1}`,
-      `cặp ${item.appliedPair}`
-    ].join(" | ");
-  }
-
   function renderComparison(report) {
-    const matchedBody = $("matchedBody");
-    const unmatchedBody = $("unmatchedBody");
-
+    const body = $("matchedBody");
     clearBody("matchedBody");
-    clearBody("unmatchedBody");
 
-    const matchedGroups = report.matchedGroups || [];
-    const unmatched = report.unmatched || [];
-
-    matchedGroups.forEach((group, index) => {
+    report.matchedGroups.forEach((group, index) => {
       const row = document.createElement("tr");
 
+      // Cot 1: STT
       addCell(row, index + 1);
 
+      // Cot 2: Cap tao tren N-1
+      addCell(row, group.pair, "pair matched");
+
+      // Cot 3: Cap mau tao tren ngay N
       addCell(
         row,
-        group.pair,
-        "pair matched"
+        group.sourcePairs.join(", "),
+        "pair"
       );
 
-      addCell(
-        row,
-        group.count
-      );
-
+      // Cot 4: Ket qua ngay N khop
       addCell(
         row,
         formatMatchedResults(group.matchedResults),
         "detail"
       );
 
-      const detailCell = document.createElement("td");
-      detailCell.className = "detail";
-
-      (group.positions || []).forEach((item, i) => {
-        addText(
-          detailCell,
-          "div",
-          `${i + 1}. ${formatMatchedPosition(item)}`
-        );
-      });
-
-      row.appendChild(detailCell);
-      matchedBody.appendChild(row);
+      body.appendChild(row);
     });
 
-    if (!matchedGroups.length) {
-      addRow(matchedBody, [
+    if (!report.matchedGroups.length) {
+      addRow(body, [
         "",
         "Không có cặp khớp",
-        "0",
-        "Không có kết quả thực tế trùng.",
-        ""
-      ]);
-    }
-
-    unmatched.forEach((item, index) => {
-      const row = document.createElement("tr");
-
-      addCell(row, index + 1);
-
-      addCell(
-        row,
-        item.appliedPair || "",
-        "unmatched"
-      );
-
-      addCell(
-        row,
-        item.regionId || ""
-      );
-
-      addCell(
-        row,
-        formatMatchedPosition(item),
-        "detail"
-      );
-
-      unmatchedBody.appendChild(row);
-    });
-
-    if (!unmatched.length) {
-      addRow(unmatchedBody, [
         "",
-        "Không có cặp không khớp",
-        "",
-        ""
+        "Không có cặp tạo trên N−1 trùng với đuôi kết quả ngày N."
       ]);
     }
 
     showPanel("comparisonPanel");
   }
 
-  // ---------------------------------------------
-  // HIEN THI DUOI THUC TE NGAY N
-  // ---------------------------------------------
+  // --------------------------------------------------
+  // CHAY TOAN BO QUY TRINH
+  // --------------------------------------------------
 
-  function renderActualTails(report) {
-    const body = $("actualBody");
-    clearBody("actualBody");
+  async function runAnalysis() {
+    const date = $("selectedDate").value;
 
-    const actualTails = report.actualTails || [];
-
-    actualTails.forEach((item, index) => {
-      addRow(body, [
-        item.prize,
-        item.numberIndex + 1,
-        item.number,
-        item.tail
-      ]);
-    });
-
-    if (!actualTails.length) {
-      addRow(body, [
-        "",
-        "",
-        "",
-        "Không có dữ liệu đuôi."
-      ]);
+    if (!date) {
+      setStatus("Vui lòng chọn ngày N trước khi chạy.", "warning");
+      return;
     }
 
-    showPanel("actualPanel");
-  }
+    const algorithm = window.XSMBAlgorithm;
 
-  // ---------------------------------------------
-  // AN KHI CHUA CHAY HOAC CO LOI
-  // ---------------------------------------------
+    if (!algorithm || typeof algorithm.analyze !== "function") {
+      hideResults();
+      setStatus(
+        "Không tải được algorithm.js hoặc không tìm thấy hàm analyze().",
+        "error"
+      );
+      return;
+    }
 
-  function hideResults() {
-    [
-      "summary",
-      "sourcePanel",
-      "targetPanel",
-      "comparisonPanel",
-      "actualPanel",
-      "jsonPanel"
-    ].forEach(hidePanel);
-  }
+    $("runButton").disabled = true;
+    lastReport = null;
+    hideResults();
 
-  // ---------------------------------------------
-  // CHAY THUAT TOAN
-  // ---------------------------------------------
-
-  $("runButton").addEventListener("click", () => {
     try {
-      const algorithm = window.XSMBAlgorithm;
-
-      if (
-        !algorithm ||
-        typeof algorithm.analyze !== "function"
-      ) {
-        throw new Error(
-          "Không tải được algorithm.js hoặc không tìm thấy hàm analyze()."
-        );
-      }
-
-      const source =
-        algorithm.TEST_DATA["2026-10-23"];
-
-      const previous =
-        algorithm.TEST_DATA["2026-10-22"];
-
-      if (!source || !previous) {
-        throw new Error(
-          "Không tìm thấy dữ liệu ngày N hoặc ngày N-1."
-        );
-      }
-
-      // source = ngay N
-      // previous = ngay N-1
-      const report = algorithm.analyze(
-        source,
-        previous
+      setStatus(
+        `Đang gọi Worker để đọc ngày ${formatDate(date)} và ngày liền trước...`,
+        ""
       );
 
-      if (!report || !Array.isArray(report.patterns)) {
-        throw new Error(
-          "Kết quả thuật toán không đúng cấu trúc."
-        );
+      const workerInfo = await readWorker(date);
+
+      setStatus(
+        "Đã nhận dữ liệu Worker. Đang kiểm tra cấu trúc và số lượng kết quả...",
+        ""
+      );
+
+      // Kiem tra lai bang validator cua algorithm.
+      algorithm.validateDay(workerInfo.sourceDay, "ngày N");
+      algorithm.validateDay(workerInfo.previousDay, "ngày N−1");
+
+      setStatus(
+        "Dữ liệu hợp lệ. Đang tìm mẫu, chuyển tọa độ và đối chiếu...",
+        ""
+      );
+
+      const report = algorithm.analyze(
+        workerInfo.sourceDay,
+        workerInfo.previousDay,
+        { minPositions: 6 }
+      );
+
+      if (
+        !report ||
+        !Array.isArray(report.patterns) ||
+        !Array.isArray(report.applied) ||
+        !Array.isArray(report.matchedGroups)
+      ) {
+        throw new Error("Kết quả thuật toán không đúng cấu trúc.");
       }
 
       lastReport = report;
 
-      // Tong quan
-      renderSummary(report);
-
-      // A. Mau ngay N
+      renderSummary(report, workerInfo);
       renderSource(report);
-
-      // B. Ap dung toa do sang ngay N-1
       renderApplied(report);
-
-      // C. Doi chieu voi ngay N
       renderComparison(report);
 
-      // D. Duoi thuc te ngay N
-      renderActualTails(report);
-
-      // E. JSON
-      $("jsonOutput").textContent =
-        JSON.stringify(report, null, 2);
+      $("jsonOutput").textContent = JSON.stringify({
+        worker: {
+          version: workerInfo.workerVersion,
+          source: workerInfo.source
+        },
+        input: {
+          sourceDay: workerInfo.sourceDay,
+          previousDay: workerInfo.previousDay
+        },
+        report
+      }, null, 2);
 
       showPanel("jsonPanel");
 
-      showSuccess(
-        "Đã chạy thuật toán thành công. " +
-        "Đã hiển thị mẫu, tọa độ áp dụng và kết quả đối chiếu. " +
-        "Lưu ý: dữ liệu hiện tại là dữ liệu thử nghiệm."
+      setStatus(
+        `Hoàn tất. Đã đọc đúng ngày ${formatDate(report.sourceDate)} ` +
+        `và ngày ${formatDate(report.targetDate)}. ` +
+        `Tìm được ${report.qualifiedPatternCount} mẫu đủ điều kiện, ` +
+        `có ${report.matchedPairGroupCount} nhóm cặp khớp.`,
+        "success"
       );
 
-      console.log(
-        "XSMB Algorithm Report:",
-        report
-      );
+      console.log("XSMB Worker input:", workerInfo);
+      console.log("XSMB Algorithm report:", report);
 
     } catch (error) {
       hideResults();
-      showError(error);
-    }
-  });
 
-  // ---------------------------------------------
+      setStatus(
+        "DỪNG PHÂN TÍCH: " +
+        (error && error.message ? error.message : String(error)),
+        "error"
+      );
+
+      console.error("XSMB analysis error:", error);
+
+    } finally {
+      $("runButton").disabled = false;
+    }
+  }
+
+  $("runButton").addEventListener("click", runAnalysis);
+
+  // --------------------------------------------------
   // SAO CHEP JSON
-  // ---------------------------------------------
+  // --------------------------------------------------
 
   $("copyButton").addEventListener("click", async () => {
     if (!lastReport) {
-      showWarning("Chưa có dữ liệu JSON để sao chép.");
+      setStatus("Chưa có dữ liệu JSON để sao chép.", "warning");
       return;
     }
 
-    const json = JSON.stringify(
-      lastReport,
-      null,
-      2
-    );
+    const json = $("jsonOutput").textContent;
 
     try {
       await navigator.clipboard.writeText(json);
-
-      showSuccess("Đã sao chép toàn bộ JSON.");
-
+      setStatus("Đã sao chép JSON thành công.", "success");
     } catch (error) {
-      showWarning(
-        "Không thể sao chép tự động. " +
-        "Hãy chọn nội dung JSON và sao chép thủ công."
+      setStatus(
+        "Trình duyệt không cho phép sao chép tự động. " +
+        "Bạn có thể chọn nội dung JSON và sao chép thủ công.",
+        "warning"
       );
     }
   });
+
+  // Mac dinh ngay hien tai theo gio may nguoi dung.
+  function setDefaultDate() {
+    const now = new Date();
+
+    const today = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      String(now.getDate()).padStart(2, "0")
+    ].join("-");
+
+    $("selectedDate").value = today;
+  }
+
+  setDefaultDate();
 
 })();
 </script>
