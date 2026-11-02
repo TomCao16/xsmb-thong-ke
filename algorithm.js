@@ -572,39 +572,43 @@
       }
     }
 
-    const matchedGroups = Array.from(groups.values()).map(group => {
-      const uniqueResults = [];
-      const seenResults = new Set();
+const matchedGroups = Array.from(groups.values())
+  .map(group => {
+    const uniqueResults = [];
+    const seenResults = new Set();
 
-      for (const result of group.matchedResults) {
-        const signature = [
-          result.prize,
-          result.numberIndex,
-          result.number,
-          result.tail
-        ].join("|");
+    for (const result of group.matchedResults) {
+      const signature = [
+        result.prize,
+        result.numberIndex,
+        result.number,
+        result.tail
+      ].join("|");
 
-        if (seenResults.has(signature)) continue;
+      if (seenResults.has(signature)) continue;
 
-        seenResults.add(signature);
-        uniqueResults.push(result);
-      }
+      seenResults.add(signature);
+      uniqueResults.push(result);
+    }
 
-      const totals = patternTotals.get(group.canonical) || {
-        totalPositions: 0,
-        appliedPositions: 0
-      };
+    const totals = patternTotals.get(group.canonical) || {
+      totalPositions: 0,
+      appliedPositions: 0
+    };
 
-      return {
-        pair: group.pair,
-        canonical: group.canonical,
-        totalPositions: totals.totalPositions,
-        appliedPositions: totals.appliedPositions,
-        matchedPositions: group.positions.length,
-        positions: group.positions,
-        matchedResults: uniqueResults
-      };
-    }).sort((a, b) => a.canonical.localeCompare(b.canonical));
+    return {
+      pair: group.pair,
+      canonical: group.canonical,
+      totalPositions: totals.totalPositions,
+      appliedPositions: totals.appliedPositions,
+      matchedPositions: group.positions.length,
+      positions: group.positions,
+      matchedResults: uniqueResults
+    };
+  })
+  // Chi hien thi cap mau co tu 4 vi tri khop tro len.
+  .filter(group => group.matchedPositions >= 4)
+  .sort((a, b) => a.canonical.localeCompare(b.canonical));
 
     return {
       matched,
