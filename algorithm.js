@@ -3,103 +3,56 @@
 
 /*
  * XSMB THONG KE
- * Algorithm version 3.0.0
+ * Algorithm version 4.0.0
  *
- * QUY TRINH:
- * 1. Ngay N: Tao mau trong cac vung do va den da khai bao.
- * 2. Loc cap co toi thieu 5 luot tao thanh.
- * 3. Ngay N-1: Ap dung dung cac toa do mau cua ngay N.
- * 4. Ngay N: Lay duoi 2 so DB -> G7 de doi chieu.
- * 5. Chi giu cac cap tao tren N-1 co mat trong ket qua ngay N.
+ * DATA INPUT:
+ * {
+ *   date: "YYYY-MM-DD",
+ *   DB: ["....."],
+ *   G1: ["....."],
+ *   G2: [".....", "....."],
+ *   G3: [".....", ...],
+ *   G4: ["....", ...],
+ *   G5: ["....", ...],
+ *   G6: ["...", ...],
+ *   G7: ["..", ...]
+ * }
  *
- * VUNG DO:
- * Ghep moi hai vi tri chu so khac nhau trong cung vung.
+ * Quy trinh:
+ * 1. Tim mau tren ngay N.
+ * 2. Chi giu cap co it nhat 6 toa do khac nhau.
+ * 3. Chuyen nguyen toa do sang ngay N-1.
+ * 4. Tao cap moi bang chu so ngay N-1.
+ * 5. Doi chieu voi duoi DB den G7 ngay N.
+ * 6. Chi hien thi cap khop; cap dao chieu duoc gom chung.
  *
- * VUNG DEN:
- * Chi ghep hai chu so lien ke ben trong tung so.
- *
- * KHONG GHEP:
- * Khong ghep giua hai vung khac nhau.
- * Khong tu dong mo rong vung.
+ * Khong co TEST_DATA, khong tu tao du lieu thay the.
  */
 
 (function (root) {
   "use strict";
 
-  const VERSION = "3.0.0";
+  const VERSION = "4.0.0";
 
-  const CONFIG = {
-    sourceDate: "2026-10-23",
-    targetDate: "2026-10-22",
-    minPositions: 5
-  };
-
-  /*
-   * DU LIEU KIEM THU CU.
-   * Chua phai du lieu da xac minh tu website.
-   * Khi su dung du lieu thuc te, truyen sourceDay va
-   * previousDay vao analyze().
-   */
-
-  const TEST_DATA = {
-    "2026-10-23": {
-      DB: ["97067"],
-      G1: ["19688"],
-      G2: ["87440", "68563"],
-      G3: [
-        "98237", "96450", "34516",
-        "92414", "41011", "49196"
-      ],
-      G4: ["0840", "7322", "9978", "7001"],
-      G5: [
-        "0664", "1595", "8514",
-        "6342", "2372", "0724"
-      ],
-      G6: ["953", "200", "521"],
-      G7: ["70", "16", "53", "03"]
+  const CONFIG = Object.freeze({
+    minPositions: 6,
+    expectedCounts: {
+      DB: 1, G1: 1, G2: 2, G3: 6,
+      G4: 4, G5: 6, G6: 3, G7: 4
     },
-
-    "2026-10-22": {
-      DB: ["25814"],
-      G1: ["12613"],
-      G2: ["02537", "15905"],
-      G3: [
-        "19974", "68554", "91512",
-        "60166", "90697", "22343"
-      ],
-      G4: ["9631", "5856", "6546", "2861"],
-      G5: [
-        "2064", "8820", "1891",
-        "7956", "7998", "8415"
-      ],
-      G6: ["759", "199", "732"],
-      G7: ["75", "17", "82", "21"]
+    expectedLengths: {
+      DB: 5, G1: 5, G2: 5, G3: 5,
+      G4: 4, G5: 4, G6: 3, G7: 2
     }
-  };
+  });
 
-  // =====================================================
-  // 1. KHAI BAO CAC VUNG DUOC PHEP GHEP
-  // =====================================================
+  const RESULT_PRIZES = [
+    "DB", "G1", "G2", "G3",
+    "G4", "G5", "G6", "G7"
+  ];
 
-  /*
-   * index bat dau tu 0:
-   *
-   * G3:
-   * 0, 1, 2 = hang tren
-   * 3, 4, 5 = hang duoi
-   *
-   * G5:
-   * 0, 1, 2 = hang tren
-   * 3, 4, 5 = hang duoi
-   *
-   * G6:
-   * 0, 1, 2 = ba so tu trai sang phai
-   *
-   * DB va G1 moi giai co mot so.
-   */
-
+  // Cac vung ghep duoc giu nguyen theo thiet ke 3.0.0.
   const REGION_CONFIG = [
-    // ---------------- VUNG DO DB + G1 ----------------
     {
       id: "RED_DB_G1",
       type: "red",
@@ -108,8 +61,6 @@
         { prize: "G1", index: 0 }
       ]
     },
-
-    // ---------------- VUNG DO G3 ----------------
     {
       id: "RED_G3_LEFT",
       type: "red",
@@ -134,8 +85,6 @@
         { prize: "G3", index: 5 }
       ]
     },
-
-    // ---------------- VUNG DO G5 + G6 ----------------
     {
       id: "RED_G5_LEFT",
       type: "red",
@@ -163,8 +112,6 @@
         { prize: "G6", index: 2 }
       ]
     },
-
-    // ---------------- VUNG DEN G2 ----------------
     {
       id: "BLACK_G2_1",
       type: "black",
@@ -175,8 +122,6 @@
       type: "black",
       cells: [{ prize: "G2", index: 1 }]
     },
-
-    // ---------------- VUNG DEN G4 ----------------
     {
       id: "BLACK_G4_1",
       type: "black",
@@ -199,43 +144,27 @@
     }
   ];
 
-  // =====================================================
-  // 2. CHUAN HOA VA DOC DU LIEU
-  // =====================================================
-
   function normalizeNumber(value) {
-    if (value === null || value === undefined) {
-      return "";
-    }
-
+    if (value === null || value === undefined) return "";
     return String(value).trim().replace(/\s+/g, "");
   }
 
   function getNumbers(day, prize) {
     const values = day && day[prize];
-
-    if (!Array.isArray(values)) {
-      return [];
-    }
-
+    if (!Array.isArray(values)) return [];
     return values.map(normalizeNumber);
   }
 
   function getNumber(day, prize, index) {
-    const numbers = getNumbers(day, prize);
-    return numbers[index] || "";
+    return getNumbers(day, prize)[index] || "";
   }
 
   function getCellId(prize, index) {
     return `${prize}_${index}`;
   }
 
-  function getCellValue(day, cellConfig) {
-    return getNumber(
-      day,
-      cellConfig.prize,
-      cellConfig.index
-    );
+  function getCellValue(day, cell) {
+    return getNumber(day, cell.prize, cell.index);
   }
 
   function getDigit(day, position) {
@@ -257,125 +186,117 @@
     return number[position.digitIndex];
   }
 
-  function makePosition(day, cellConfig, digitIndex) {
-    const number = getCellValue(day, cellConfig);
+  function makePosition(day, cell, digitIndex) {
+    const number = getCellValue(day, cell);
 
-    if (
-      !number ||
-      digitIndex < 0 ||
-      digitIndex >= number.length
-    ) {
+    if (!number || digitIndex < 0 || digitIndex >= number.length) {
       return null;
     }
 
     return {
-      cellId: getCellId(
-        cellConfig.prize,
-        cellConfig.index
-      ),
-      prize: cellConfig.prize,
-      numberIndex: cellConfig.index,
-      number: number,
-      digitIndex: digitIndex
+      cellId: getCellId(cell.prize, cell.index),
+      prize: cell.prize,
+      numberIndex: cell.index,
+      number,
+      digitIndex
     };
   }
 
-  // =====================================================
-  // 3. KIEM TRA CAU TRUC DU LIEU VA VUNG
-  // =====================================================
-
+  // Kiem tra dung so luong ket qua va do dai tung giai.
   function validateDay(day, label) {
     if (!day || typeof day !== "object") {
-      throw new Error(`Du lieu ${label} khong hop le.`);
+      throw new Error(`Dữ liệu ${label} không hợp lệ.`);
     }
 
-    const requiredPrizes = [
-      "DB", "G1", "G2", "G3",
-      "G4", "G5", "G6", "G7"
-    ];
+    if (!day.date || !/^\d{4}-\d{2}-\d{2}$/.test(day.date)) {
+      throw new Error(`Dữ liệu ${label} thiếu ngày hợp lệ.`);
+    }
 
     const errors = [];
 
-    for (const prize of requiredPrizes) {
-      if (!Array.isArray(day[prize])) {
-        errors.push(`Thieu mang ket qua ${prize}.`);
+    for (const prize of RESULT_PRIZES) {
+      const values = day[prize];
+      const expectedCount = CONFIG.expectedCounts[prize];
+      const expectedLength = CONFIG.expectedLengths[prize];
+
+      if (!Array.isArray(values)) {
+        errors.push(`${prize}: không có mảng kết quả`);
+        continue;
       }
+
+      if (values.length !== expectedCount) {
+        errors.push(
+          `${prize}: cần ${expectedCount} kết quả, nhận ${values.length}`
+        );
+        continue;
+      }
+
+      values.forEach((raw, index) => {
+        const value = normalizeNumber(raw);
+
+        if (!new RegExp(`^\\d{${expectedLength}}$`).test(value)) {
+          errors.push(
+            `${prize} kết quả ${index + 1}: sai định dạng ${expectedLength} chữ số`
+          );
+        }
+      });
     }
 
     if (errors.length) {
       throw new Error(
-        `Du lieu ${label} khong day du: ` +
-        errors.join(" ")
+        `Dữ liệu ${label} không đầy đủ hoặc sai định dạng: ` +
+        errors.join("; ")
       );
     }
+
+    return true;
   }
 
   function validateRegions(regions) {
+    if (!Array.isArray(regions)) {
+      throw new Error("Cấu hình vùng ghép không hợp lệ.");
+    }
+
     const ids = new Set();
 
     for (const region of regions) {
-      if (!region || !region.id) {
-        throw new Error("Vung ghep thieu id.");
-      }
-
-      if (ids.has(region.id)) {
-        throw new Error(
-          `Trung ma vung: ${region.id}`
-        );
+      if (!region || !region.id || ids.has(region.id)) {
+        throw new Error("Vùng ghép thiếu ID hoặc bị trùng ID.");
       }
 
       ids.add(region.id);
 
-      if (
-        region.type !== "red" &&
-        region.type !== "black"
-      ) {
-        throw new Error(
-          `Loai vung khong hop le: ${region.id}`
-        );
+      if (!["red", "black"].includes(region.type)) {
+        throw new Error(`Loại vùng không hợp lệ: ${region.id}`);
       }
 
-      if (!Array.isArray(region.cells) ||
-          region.cells.length === 0) {
-        throw new Error(
-          `Vung ${region.id} khong co o so.`
-        );
+      if (!Array.isArray(region.cells) || !region.cells.length) {
+        throw new Error(`Vùng ${region.id} không có ô số.`);
+      }
+
+      for (const cell of region.cells) {
+        if (
+          !RESULT_PRIZES.includes(cell.prize) ||
+          !Number.isInteger(cell.index) ||
+          cell.index < 0 ||
+          cell.index >= CONFIG.expectedCounts[cell.prize]
+        ) {
+          throw new Error(`Tọa độ cấu hình không hợp lệ tại ${region.id}.`);
+        }
       }
     }
   }
 
-  // =====================================================
-  // 4. TAO CAP TRONG VUNG DO
-  // =====================================================
-
-  /*
-   * Vung do:
-   * Lay tat ca vi tri chu so trong cung mot vung.
-   * Moi hai vi tri khac nhau tao thanh mot cap.
-   *
-   * Khong ghep sang vung khac.
-   * Khong gioi han phai lien ke.
-   */
-
+  // Vung do: moi cap vi tri chu so khac nhau trong cung mot vung.
   function createRedPairs(day, region) {
     const positions = [];
 
-    for (const cellConfig of region.cells) {
-      const number = getCellValue(day, cellConfig);
+    for (const cell of region.cells) {
+      const number = getCellValue(day, cell);
 
-      for (let digitIndex = 0;
-           digitIndex < number.length;
-           digitIndex++) {
-
-        const position = makePosition(
-          day,
-          cellConfig,
-          digitIndex
-        );
-
-        if (position) {
-          positions.push(position);
-        }
+      for (let digitIndex = 0; digitIndex < number.length; digitIndex++) {
+        const position = makePosition(day, cell, digitIndex);
+        if (position) positions.push(position);
       }
     }
 
@@ -385,16 +306,10 @@
       for (let j = i + 1; j < positions.length; j++) {
         const left = positions[i];
         const right = positions[j];
-
         const leftDigit = getDigit(day, left);
         const rightDigit = getDigit(day, right);
 
-        if (
-          leftDigit === null ||
-          rightDigit === null
-        ) {
-          continue;
-        }
+        if (leftDigit === null || rightDigit === null) continue;
 
         creations.push({
           regionId: region.id,
@@ -410,39 +325,18 @@
     return creations;
   }
 
-  // =====================================================
-  // 5. TAO CAP TRONG VUNG DEN
-  // =====================================================
-
-  /*
-   * Vung den:
-   * Moi so duoc xu ly rieng.
-   * Chi ghep digit i voi digit i+1.
-   * Khong ghep giua hai so.
-   */
-
+  // Vung den: chi ghep hai chu so lien ke trong tung so.
   function createBlackPairs(day, region) {
     const creations = [];
 
-    for (const cellConfig of region.cells) {
-      const number = getCellValue(day, cellConfig);
+    for (const cell of region.cells) {
+      const number = getCellValue(day, cell);
 
       for (let i = 0; i < number.length - 1; i++) {
-        const left = makePosition(
-          day,
-          cellConfig,
-          i
-        );
+        const left = makePosition(day, cell, i);
+        const right = makePosition(day, cell, i + 1);
 
-        const right = makePosition(
-          day,
-          cellConfig,
-          i + 1
-        );
-
-        if (!left || !right) {
-          continue;
-        }
+        if (!left || !right) continue;
 
         creations.push({
           regionId: region.id,
@@ -458,70 +352,43 @@
     return creations;
   }
 
-  // =====================================================
-  // 6. TAO TAT CA CAP THEO CAC VUNG DA KHAI BAO
-  // =====================================================
-
   function createAllPairs(day, regions = REGION_CONFIG) {
     validateRegions(regions);
 
     const creations = [];
 
     for (const region of regions) {
-      let items = [];
-
       if (region.type === "red") {
-        items = createRedPairs(day, region);
+        creations.push(...createRedPairs(day, region));
+      } else {
+        creations.push(...createBlackPairs(day, region));
       }
-
-      if (region.type === "black") {
-        items = createBlackPairs(day, region);
-      }
-
-      creations.push(...items);
     }
 
     return creations;
   }
 
-  // =====================================================
-  // 7. GOP CAP DAO CHIEU
-  // =====================================================
-
   function canonicalPair(pair) {
-    if (
-      typeof pair !== "string" ||
-      pair.length !== 2
-    ) {
+    if (typeof pair !== "string" || !/^\d{2}$/.test(pair)) {
       return pair;
     }
 
     const reverse = pair[1] + pair[0];
-
     return pair <= reverse ? pair : reverse;
   }
 
   function positionSignature(creation) {
-    const left = creation.left;
-    const right = creation.right;
-
     return [
       creation.regionId,
-      left.cellId,
-      left.digitIndex,
-      right.cellId,
-      right.digitIndex
+      creation.left.cellId,
+      creation.left.digitIndex,
+      creation.right.cellId,
+      creation.right.digitIndex
     ].join("|");
   }
 
-  // =====================================================
-  // 8. LOC MAU CO IT NHAT 5 LUOT TAO THANH
-  // =====================================================
-
-  function groupCreations(
-    creations,
-    minPositions = CONFIG.minPositions
-  ) {
+  // Gom cap dao chieu, dem moi bo toa do duy nhat mot lan.
+  function groupCreations(creations, minPositions = CONFIG.minPositions) {
     const groups = new Map();
 
     for (const creation of creations) {
@@ -530,7 +397,6 @@
       if (!groups.has(key)) {
         groups.set(key, {
           canonical: key,
-          count: 0,
           positions: [],
           signatures: new Set()
         });
@@ -539,14 +405,9 @@
       const group = groups.get(key);
       const signature = positionSignature(creation);
 
-      // Moi cap toa do chi duoc dem mot lan.
-      if (group.signatures.has(signature)) {
-        continue;
-      }
+      if (group.signatures.has(signature)) continue;
 
       group.signatures.add(signature);
-      group.count++;
-
       group.positions.push({
         ...creation,
         sourcePair: creation.pair,
@@ -555,13 +416,12 @@
     }
 
     return Array.from(groups.values())
-      .filter(group => group.count >= minPositions)
+      .filter(group => group.positions.length >= minPositions)
       .map(group => ({
         pair: group.canonical,
         canonical: group.canonical,
-        reverse:
-          group.canonical[1] + group.canonical[0],
-        count: group.count,
+        reverse: group.canonical[1] + group.canonical[0],
+        count: group.positions.length,
         positions: group.positions
       }))
       .sort((a, b) =>
@@ -570,32 +430,12 @@
       );
   }
 
-  // =====================================================
-  // 9. AP DUNG TOA DO MAU SANG NGAY N-1
-  // =====================================================
-
-  /*
-   * Khong tim mau moi tren ngay N-1.
-   * Khong doi cellId.
-   * Khong doi digitIndex.
-   * Chi thay gia tri so cua ngay N-1.
-   */
-
+  // Ap dung dung toa do ngay N sang ngay N-1.
   function applyOneCreation(creation, previousDay) {
-    const leftDigit = getDigit(
-      previousDay,
-      creation.left
-    );
+    const leftDigit = getDigit(previousDay, creation.left);
+    const rightDigit = getDigit(previousDay, creation.right);
 
-    const rightDigit = getDigit(
-      previousDay,
-      creation.right
-    );
-
-    if (
-      leftDigit === null ||
-      rightDigit === null
-    ) {
+    if (leftDigit === null || rightDigit === null) {
       return {
         ...creation,
         appliedPair: null,
@@ -615,25 +455,20 @@
       creation.right.numberIndex
     );
 
+    const appliedPair = leftDigit + rightDigit;
+
     return {
       ...creation,
-
-      appliedPair: leftDigit + rightDigit,
-
-      appliedCanonical: canonicalPair(
-        leftDigit + rightDigit
-      ),
-
+      appliedPair,
+      appliedCanonical: canonicalPair(appliedPair),
       appliedLeft: {
         ...creation.left,
         number: appliedLeftNumber
       },
-
       appliedRight: {
         ...creation.right,
         number: appliedRightNumber
       },
-
       status: "OK"
     };
   }
@@ -643,10 +478,7 @@
 
     for (const group of patterns) {
       for (const creation of group.positions) {
-        const result = applyOneCreation(
-          creation,
-          previousDay
-        );
+        const result = applyOneCreation(creation, previousDay);
 
         applied.push({
           sourceCanonical: group.canonical,
@@ -659,26 +491,11 @@
     return applied;
   }
 
-  // =====================================================
-  // 10. LAY DUOI 2 SO DB -> G7 CUA NGAY N
-  // =====================================================
-
-  const RESULT_PRIZES = [
-    "DB", "G1", "G2", "G3",
-    "G4", "G5", "G6", "G7"
-  ];
-
   function collectActualTails(sourceDay) {
     const tails = [];
 
     for (const prize of RESULT_PRIZES) {
-      const numbers = getNumbers(sourceDay, prize);
-
-      numbers.forEach((number, index) => {
-        if (number.length < 2) {
-          return;
-        }
-
+      getNumbers(sourceDay, prize).forEach((number, index) => {
         tails.push({
           prize,
           numberIndex: index,
@@ -691,57 +508,30 @@
     return tails;
   }
 
-  // =====================================================
-  // 11. DOI CHIEU CAP NGAY N-1 VOI KET QUA NGAY N
-  // =====================================================
-
-  /*
-   * QUAN TRONG:
-   * applied duoc tao tu previousDay (N-1).
-   * actualTails duoc lay tu sourceDay (N).
-   *
-   * Neu cap 12 thi chap nhan duoi 12 hoac 21.
-   */
-
-  function matchActualResults(
-    applied,
-    sourceDay
-  ) {
+  // Chi gom va tra ve cac cap khop voi ket qua ngay N.
+  function matchActualResults(applied, sourceDay) {
     const actualTails = collectActualTails(sourceDay);
-
     const matched = [];
-    const unmatched = [];
 
     for (const item of applied) {
-      if (
-        item.status !== "OK" ||
-        !item.appliedPair
-      ) {
-        continue;
-      }
+      if (item.status !== "OK" || !item.appliedPair) continue;
 
       const pair = item.appliedPair;
       const reverse = pair[1] + pair[0];
 
       const hits = actualTails.filter(result =>
-        result.tail === pair ||
-        result.tail === reverse
+        result.tail === pair || result.tail === reverse
       );
 
-      const record = {
-        ...item,
-        matched: hits.length > 0,
-        matchedResults: hits
-      };
-
-      if (hits.length > 0) {
-        matched.push(record);
-      } else {
-        unmatched.push(record);
+      if (hits.length) {
+        matched.push({
+          ...item,
+          matchedResults: hits
+        });
       }
     }
 
-    // Gom cac cap da khop theo cap dao chieu.
+    // Nhom cap tao tren N-1 theo cap dao chieu.
     const groups = new Map();
 
     for (const item of matched) {
@@ -751,251 +541,159 @@
         groups.set(key, {
           pair: key,
           canonical: key,
-          count: 0,
           positions: [],
+          sourcePairs: new Set(),
           matchedResults: []
         });
       }
 
       const group = groups.get(key);
-
-      group.count++;
       group.positions.push(item);
-      group.matchedResults.push(
-        ...item.matchedResults
-      );
+      group.sourcePairs.add(item.sourcePair);
+      group.matchedResults.push(...item.matchedResults);
     }
 
-    const matchedGroups = Array.from(groups.values())
-      .map(group => {
-        const uniqueResults = [];
-        const seen = new Set();
+    const matchedGroups = Array.from(groups.values()).map(group => {
+      const uniqueResults = [];
+      const seen = new Set();
 
-        for (const result of group.matchedResults) {
-          const key = [
-            result.prize,
-            result.numberIndex,
-            result.tail,
-            result.number
-          ].join("|");
+      for (const result of group.matchedResults) {
+        const signature = [
+          result.prize,
+          result.numberIndex,
+          result.number,
+          result.tail
+        ].join("|");
 
-          if (seen.has(key)) continue;
+        if (seen.has(signature)) continue;
+        seen.add(signature);
+        uniqueResults.push(result);
+      }
 
-          seen.add(key);
-          uniqueResults.push(result);
-        }
-
-        return {
-          ...group,
-          matchedResults: uniqueResults
-        };
-      })
-      .sort((a, b) =>
-        b.count - a.count ||
-        a.canonical.localeCompare(b.canonical)
-      );
+      return {
+        pair: group.pair,
+        canonical: group.canonical,
+        sourcePairs: Array.from(group.sourcePairs).sort(),
+        positions: group.positions,
+        matchedResults: uniqueResults
+      };
+    }).sort((a, b) => a.canonical.localeCompare(b.canonical));
 
     return {
-      actualTails,
       matched,
-      unmatched,
       matchedGroups
     };
   }
 
-  // =====================================================
-  // 12. HAM PHAN TICH CHINH
-  // =====================================================
+  function analyze(sourceDay, previousDay, options = {}) {
+    if (!sourceDay || !previousDay) {
+      throw new Error("Thiếu dữ liệu ngày N hoặc ngày N−1.");
+    }
 
-  function analyze(
-    sourceDay,
-    previousDay,
-    options = {}
-  ) {
-    const source = sourceDay ||
-      TEST_DATA[CONFIG.sourceDate];
+    const minPositions = options.minPositions === undefined
+      ? CONFIG.minPositions
+      : Number(options.minPositions);
 
-    const previous = previousDay ||
-      TEST_DATA[CONFIG.targetDate];
+    if (!Number.isInteger(minPositions) || minPositions < 1) {
+      throw new Error("Ngưỡng số vị trí phải là số nguyên dương.");
+    }
 
-    const minPositions = Number(
-      options.minPositions ||
-      CONFIG.minPositions
-    );
+    if (!sourceDay.date || !previousDay.date) {
+      throw new Error("Dữ liệu Worker thiếu ngày của một trong hai ngày.");
+    }
 
-    const regions = options.regions ||
-      REGION_CONFIG;
+    validateDay(sourceDay, "ngày N");
+    validateDay(previousDay, "ngày N−1");
+    validateRegions(options.regions || REGION_CONFIG);
 
-    if (
-      !Number.isInteger(minPositions) ||
-      minPositions < 1
-    ) {
+    const expectedPrevious = new Date(`${sourceDay.date}T00:00:00`);
+    expectedPrevious.setDate(expectedPrevious.getDate() - 1);
+    const expectedPreviousDate = [
+      expectedPrevious.getFullYear(),
+      String(expectedPrevious.getMonth() + 1).padStart(2, "0"),
+      String(expectedPrevious.getDate()).padStart(2, "0")
+    ].join("-");
+
+    if (previousDay.date !== expectedPreviousDate) {
       throw new Error(
-        "Nguong minPositions phai la so nguyen duong."
+        `Ngày N−1 không đúng. Cần ${expectedPreviousDate}, ` +
+        `nhưng Worker trả về ${previousDay.date}.`
       );
     }
 
-    validateDay(source, "ngay N");
-    validateDay(previous, "ngay N-1");
-    validateRegions(regions);
+    const regions = options.regions || REGION_CONFIG;
 
     // Buoc 1: Tim mau tren ngay N.
-    const sourceCreations = createAllPairs(
-      source,
-      regions
-    );
+    const sourceCreations = createAllPairs(sourceDay, regions);
 
-    // Buoc 2: Loc mau toi thieu 5 vi tri.
-    const patterns = groupCreations(
-      sourceCreations,
-      minPositions
-    );
+    // Buoc 2: Loc mau theo nguong toi thieu 6 vi tri.
+    const patterns = groupCreations(sourceCreations, minPositions);
 
-    // Buoc 3: Ap dung toa do sang ngay N-1.
-    const applied = applyPatterns(
-      patterns,
-      previous
-    );
+    // Buoc 3: Chuyen toa do mau sang ngay N-1.
+    const applied = applyPatterns(patterns, previousDay);
 
-    // Buoc 4: Doi chieu voi ket qua ngay N.
-    const comparison = matchActualResults(
-      applied,
-      source
-    );
+    // Buoc 4: Doi chieu cap tao ra voi duoi ket qua ngay N.
+    const comparison = matchActualResults(applied, sourceDay);
 
-    const validApplied = applied.filter(
-      item => item.status === "OK"
-    );
+    const validApplied = applied.filter(item => item.status === "OK");
 
     return {
       version: VERSION,
-
-      sourceDate:
-        source.date || CONFIG.sourceDate,
-
-      targetDate:
-        previous.date || CONFIG.targetDate,
-
-      comparisonDate:
-        source.date || CONFIG.sourceDate,
-
+      sourceDate: sourceDay.date,
+      targetDate: previousDay.date,
+      comparisonDate: sourceDay.date,
       minPositions,
-
       regionCount: regions.length,
-
-      sourceCreationCount:
-        sourceCreations.length,
-
-      qualifiedPatternCount:
-        patterns.length,
-
-      appliedPositionCount:
-        applied.length,
-
-      validAppliedPositionCount:
-        validApplied.length,
-
-      matchedPositionCount:
-        comparison.matched.length,
-
-      unmatchedPositionCount:
-        comparison.unmatched.length,
-
-      matchedPairGroupCount:
-        comparison.matchedGroups.length,
-
+      sourceCreationCount: sourceCreations.length,
+      qualifiedPatternCount: patterns.length,
+      appliedPositionCount: applied.length,
+      validAppliedPositionCount: validApplied.length,
+      matchedPositionCount: comparison.matched.length,
+      matchedPairGroupCount: comparison.matchedGroups.length,
       patterns,
       applied,
-
-      actualTails:
-        comparison.actualTails,
-
-      matched:
-        comparison.matched,
-
-      unmatched:
-        comparison.unmatched,
-
-      matchedGroups:
-        comparison.matchedGroups,
-
+      matched: comparison.matched,
+      matchedGroups: comparison.matchedGroups,
       summary: {
-        sourceDate:
-          source.date || CONFIG.sourceDate,
-
-        appliedDate:
-          previous.date || CONFIG.targetDate,
-
-        comparisonDate:
-          source.date || CONFIG.sourceDate,
-
-        sourceCreations:
-          sourceCreations.length,
-
-        qualifiedPatterns:
-          patterns.length,
-
-        appliedPositions:
-          applied.length,
-
-        validAppliedPositions:
-          validApplied.length,
-
-        matchedPositions:
-          comparison.matched.length,
-
-        unmatchedPositions:
-          comparison.unmatched.length,
-
-        matchedPairGroups:
-          comparison.matchedGroups.length
+        sourceCreations: sourceCreations.length,
+        qualifiedPatterns: patterns.length,
+        appliedPositions: applied.length,
+        validAppliedPositions: validApplied.length,
+        matchedPositions: comparison.matched.length,
+        matchedPairGroups: comparison.matchedGroups.length
       },
-
       note:
-        "Mau duoc tim tren ngay N; toa do duoc ap dung sang ngay N-1; cap tao ra duoc doi chieu voi duoi DB den G7 cua ngay N. TEST_DATA la du lieu thu nghiem."
+        "Mẫu được tìm trên ngày N; giữ nguyên tọa độ để áp dụng sang ngày N−1; " +
+        "cặp tạo trên N−1 được đối chiếu với đuôi DB đến G7 của ngày N. " +
+        "Chỉ hiển thị các cặp khớp."
     };
   }
-
-  // =====================================================
-  // 13. XUAT API
-  // =====================================================
 
   const API = {
     VERSION,
     CONFIG,
-    TEST_DATA,
     REGION_CONFIG,
-
     normalizeNumber,
     getNumbers,
     validateDay,
     validateRegions,
-
     createRedPairs,
     createBlackPairs,
     createAllPairs,
-
     canonicalPair,
     groupCreations,
-
     applyOneCreation,
     applyPatterns,
-
     collectActualTails,
     matchActualResults,
-
     analyze
   };
 
   if (typeof window !== "undefined") {
     window.XSMBAlgorithm = API;
-    window.analyze = analyze;
   }
 
-  if (
-    typeof module !== "undefined" &&
-    module.exports
-  ) {
+  if (typeof module !== "undefined" && module.exports) {
     module.exports = API;
   }
 
