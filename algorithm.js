@@ -3,7 +3,7 @@
 
 /*
  * XSMB THONG KE
- * Algorithm version 4.1.0
+ * const VERSION = "4.2.0";
  *
  * Quy trinh:
  * 1. Tim mau tren ngay N.
@@ -507,7 +507,17 @@
    * - positions: chi tiet cac vi tri khop.
    * - matchedResults: cac ket qua thuc te ngay N khop.
    */
-  function matchActualResults(applied, sourceDay) {
+ function matchActualResults(
+  applied,
+  sourceDay,
+  minMatchedPositions = 4
+) {
+  if (
+    !Number.isInteger(minMatchedPositions) ||
+    minMatchedPositions < 1
+  ) {
+    throw new Error("Ngưỡng vị trí khớp không hợp lệ.");
+  }
     const actualTails = collectActualTails(sourceDay);
     const matched = [];
     const groups = new Map();
@@ -607,7 +617,7 @@ const matchedGroups = Array.from(groups.values())
     };
   })
   // Chi hien thi cap mau co tu 4 vi tri khop tro len.
-  .filter(group => group.matchedPositions >= 4)
+  .filter(group => group.matchedPositions >= minMatchedPositions)
   .sort((a, b) => a.canonical.localeCompare(b.canonical));
 
     return {
@@ -701,6 +711,262 @@ const matchedGroups = Array.from(groups.values())
     };
   }
 
+  // ==========================================
+  // PART 2 - CHUOI DOI CHIEU LIEN TIEP 5 NGAY
+  // ==========================================
+
+  function getPreviousDate(dateString) {
+    const date = new Date(`${dateString}T12:00:00Z`);
+
+    if (Number.isNaN(date.getTime())) {
+      throw new Error(`Ngày không hợp lệ: ${dateString}`);
+    }
+
+    date.setUTCDate(date.getUTCDate() - 1);
+
+    return [
+      date.getUTCFullYear(),
+      String(date.getUTCMonth() + 1).padStart(2, "0"),
+      String(date.getUTCDate()).padStart(2, "0")
+    ].join("-");
+  }
+
+  function validateFiveDays(days) {
+    if (!Array.isArray(days) || days.length !== 5) {
+      throw new Error(
+        "Phần 2 cần đúng 5 ngày dữ liệu theo thứ tự N đến N-4."
+      );
+    }
+
+    for (let i = 0; i < 5; i++) {
+      validateDay(days[i], `ngày thứ ${i + 1}`);
+
+      if (i > 0) {
+        const expectedDate = getPreviousDate(days[i - 1].date);
+
+        if (days[i].date !== expectedDate) {
+          throw new Error(
+            `Chuỗi ngày không liên tục. ` +
+            `Sau ${days[i - 1].date} cần ${expectedDate}, ` +
+            `nhưng nhận ${days[i].date}.`
+          );
+        }
+      }
+    }
+
+    return true;
+  }
+
+  /*
+   * Chuyển các nhóm còn khớp ở giai đoạn trước
+   * thành mẫu đầu vào cho giai đoạn tiếp theo.
+   *
+   * Không tìm lại mẫu mới.
+   * Không bổ sung tọa độ đã bị loại.
+   */
+  function carryForwardPatterns(matchedGroups) {
+    return matchedGroups.map(group => ({
+      pair: group.canonical,
+      canonical: group.canonical,
+      reverse: group.canonical[1] + group.canonical[0],
+      count: group.positions.length,
+      positions: group.positions
+    }));
+  }
+
+  /*
+   * Chạy một giai đoạn:
+   *
+   * 1. Nhận các mẫu và tọa độ còn được giữ.
+   * 2. Áp dụng tọa độ sang ngày kế trước.
+   * 3. Đối chiếu với kết quả thực tế của ngày nguồn.
+   * 4. Chỉ giữ nhóm đạt ngưỡng vị trí khớp.
+   */
+  function runPart2Stage({
+    stageNumber,
+    patterns,
+    sourceDay,
+    targetDay,
+    minMatchedPositions
+  }) {
+    const applied = applyPatterns(patterns, targetDay);
+
+    const comparison = matchActualResults(
+      applied,
+      sourceDay,
+      minMatchedPositions
+    );
+
+    const validApplied = applied.filter(
+      item => item.status === "OK"
+    );
+
+    return {
+      stage: stageNumber,
+      sourceDate: sourceDay.date,
+      targetDate: targetDay.date,
+      comparisonDate: sourceDay.date,
+
+      inputPatternCount: patterns.length,
+      appliedPositionCount: applied.length,
+      validAppliedPositionCount: validApplied.length,
+
+      matchedPositionCount: comparison.matched.length,
+      matchedPairGroupCount: comparison.matchedGroups.length,
+
+      matchedGroups: comparison.matchedGroups,
+
+      // Giữ chi tiết để có thể kiểm tra khi cần.
+      applied,
+      matched: comparison.matched,
+
+      summary: {
+        inputPatterns: patterns.length,
+        appliedPositions: applied.length,
+        validAppliedPositions: validApplied.length,
+        matchedPositions: comparison.matched.length,
+        matchedPairGroups: comparison.matchedGroups.length
+      }
+    };
+  }
+
+  /*
+   * PHÂN TÍCH PHẦN 2:
+   *
+   * days[0] = N
+   * days[1] = N-1
+   * days[2] = N-2
+   * days[3] = N-3
+   * days[4] = N-4
+   *
+   * Giai đoạn 1:
+   * Tìm mẫu trên N, áp dụng N-1, so với N.
+   *
+   * Giai đoạn 2:
+   * Chỉ dùng tọa độ còn khớp ở giai đoạn 1,
+   * áp dụng N-2, so với N-1.
+   *
+   * Giai đoạn 3:
+   * Chỉ dùng tọa độ còn khớp ở giai đoạn 2,
+   * áp dụng N-3, so với N-2.
+   *
+   * Giai đoạn 4:
+   * Chỉ dùng tọa độ còn khớp ở giai đoạn 3,
+   * áp dụng N-4, so với N-3.
+   */
+  function analyzePart2(days, options = {}) {
+    validateFiveDays(days);
+
+    const minSourcePositions =
+      options.minSourcePositions === undefined
+        ? CONFIG.minPositions
+        : Number(options.minSourcePositions);
+
+    const minMatchedPositions =
+      options.minMatchedPositions === undefined
+        ? 4
+        : Number(options.minMatchedPositions);
+
+    if (
+      !Number.isInteger(minSourcePositions) ||
+      minSourcePositions < 1
+    ) {
+      throw new Error("Ngưỡng mẫu ban đầu không hợp lệ.");
+    }
+
+    if (
+      !Number.isInteger(minMatchedPositions) ||
+      minMatchedPositions < 1
+    ) {
+      throw new Error("Ngưỡng vị trí khớp không hợp lệ.");
+    }
+
+    const regions = options.regions || REGION_CONFIG;
+
+    validateRegions(regions);
+
+    const [dayN, dayN1, dayN2, dayN3, dayN4] = days;
+
+    // Bước đầu tiên: chỉ tìm mẫu trên ngày N.
+    const sourceCreations = createAllPairs(dayN, regions);
+
+    let patterns = groupCreations(
+      sourceCreations,
+      minSourcePositions
+    );
+
+    const initialPatternCount = patterns.length;
+
+    const stages = [];
+
+    const stageDays = [
+      [dayN, dayN1],
+      [dayN1, dayN2],
+      [dayN2, dayN3],
+      [dayN3, dayN4]
+    ];
+
+    // Chạy lần lượt 4 giai đoạn.
+    for (let i = 0; i < stageDays.length; i++) {
+      const [sourceDay, targetDay] = stageDays[i];
+
+      const stageResult = runPart2Stage({
+        stageNumber: i + 1,
+        patterns,
+        sourceDay,
+        targetDay,
+        minMatchedPositions
+      });
+
+      stages.push(stageResult);
+
+      // Chỉ chuyển tiếp tọa độ còn khớp.
+      // Không tạo lại mẫu từ dữ liệu ngày N.
+      patterns = carryForwardPatterns(
+        stageResult.matchedGroups
+      );
+    }
+
+    const finalStage = stages[stages.length - 1];
+
+    return {
+      version: VERSION,
+      part: 2,
+
+      sourceDate: dayN.date,
+      dates: days.map(day => day.date),
+
+      minSourcePositions,
+      minMatchedPositions,
+
+      sourceCreationCount: sourceCreations.length,
+      initialPatternCount,
+
+      stages,
+
+      // Đây là danh sách cuối cùng dùng cho phần C.
+      finalGroups: finalStage.matchedGroups,
+
+      summary: {
+        initialPatterns: initialPatternCount,
+
+        stage1Groups: stages[0].matchedPairGroupCount,
+        stage2Groups: stages[1].matchedPairGroupCount,
+        stage3Groups: stages[2].matchedPairGroupCount,
+        stage4Groups: stages[3].matchedPairGroupCount,
+
+        finalPairGroups: finalStage.matchedPairGroupCount,
+        finalMatchedPositions: finalStage.matchedPositionCount
+      },
+
+      note:
+        "Phần 2 tìm mẫu ban đầu trên ngày N, sau đó chuyển tiếp " +
+        "chính xác các tọa độ còn khớp qua N-1, N-2, N-3 và N-4. " +
+        "Mỗi giai đoạn đối chiếu với kết quả thực tế của ngày nguồn " +
+        "và chỉ giữ nhóm đạt ngưỡng vị trí khớp."
+    };
+  }
+
   const API = {
     VERSION,
     CONFIG,
@@ -718,6 +984,9 @@ const matchedGroups = Array.from(groups.values())
     applyPatterns,
     collectActualTails,
     matchActualResults,
+    getPreviousDate,
+    validateFiveDays,
+    analyzePart2
     analyze
   };
 
