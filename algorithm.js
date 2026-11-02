@@ -616,7 +616,6 @@ const matchedGroups = Array.from(groups.values())
       matchedResults: uniqueResults
     };
   })
-  // Chi hien thi cap mau co tu 4 vi tri khop tro len.
   .filter(group => group.matchedPositions >= minMatchedPositions)
   .sort((a, b) => a.canonical.localeCompare(b.canonical));
 
@@ -765,14 +764,19 @@ const matchedGroups = Array.from(groups.values())
    * Không bổ sung tọa độ đã bị loại.
    */
   function carryForwardPatterns(matchedGroups) {
-    return matchedGroups.map(group => ({
+  return matchedGroups
+    .filter(group =>
+      Array.isArray(group.positions) &&
+      group.positions.length > 0
+    )
+    .map(group => ({
       pair: group.canonical,
       canonical: group.canonical,
       reverse: group.canonical[1] + group.canonical[0],
       count: group.positions.length,
       positions: group.positions
     }));
-  }
+}
 
   /*
    * Chạy một giai đoạn:
@@ -783,53 +787,51 @@ const matchedGroups = Array.from(groups.values())
    * 4. Chỉ giữ nhóm đạt ngưỡng vị trí khớp.
    */
   function runPart2Stage({
-    stageNumber,
-    patterns,
+  stageNumber,
+  patterns,
+  sourceDay,
+  targetDay
+}) {
+  const applied = applyPatterns(patterns, targetDay);
+
+  // Phần 2 chỉ cần ít nhất 1 vị trí khớp.
+  const comparison = matchActualResults(
+    applied,
     sourceDay,
-    targetDay,
-    minMatchedPositions
-  }) {
-    const applied = applyPatterns(patterns, targetDay);
+    1
+  );
 
-    const comparison = matchActualResults(
-      applied,
-      sourceDay,
-      minMatchedPositions
-    );
+  const validApplied = applied.filter(
+    item => item.status === "OK"
+  );
 
-    const validApplied = applied.filter(
-      item => item.status === "OK"
-    );
+  return {
+    stage: stageNumber,
+    sourceDate: sourceDay.date,
+    targetDate: targetDay.date,
+    comparisonDate: sourceDay.date,
 
-    return {
-      stage: stageNumber,
-      sourceDate: sourceDay.date,
-      targetDate: targetDay.date,
-      comparisonDate: sourceDay.date,
+    inputPatternCount: patterns.length,
+    appliedPositionCount: applied.length,
+    validAppliedPositionCount: validApplied.length,
 
-      inputPatternCount: patterns.length,
-      appliedPositionCount: applied.length,
-      validAppliedPositionCount: validApplied.length,
+    matchedPositionCount: comparison.matched.length,
+    matchedPairGroupCount: comparison.matchedGroups.length,
 
-      matchedPositionCount: comparison.matched.length,
-      matchedPairGroupCount: comparison.matchedGroups.length,
+    matchedGroups: comparison.matchedGroups,
 
-      matchedGroups: comparison.matchedGroups,
+    applied,
+    matched: comparison.matched,
 
-      // Giữ chi tiết để có thể kiểm tra khi cần.
-      applied,
-      matched: comparison.matched,
-
-      summary: {
-        inputPatterns: patterns.length,
-        appliedPositions: applied.length,
-        validAppliedPositions: validApplied.length,
-        matchedPositions: comparison.matched.length,
-        matchedPairGroups: comparison.matchedGroups.length
-      }
-    };
-  }
-
+    summary: {
+      inputPatterns: patterns.length,
+      appliedPositions: applied.length,
+      validAppliedPositions: validApplied.length,
+      matchedPositions: comparison.matched.length,
+      matchedPairGroups: comparison.matchedGroups.length
+    }
+  };
+}
   /*
    * PHÂN TÍCH PHẦN 2:
    *
@@ -857,45 +859,23 @@ const matchedGroups = Array.from(groups.values())
   function analyzePart2(days, options = {}) {
     validateFiveDays(days);
 
-    const minSourcePositions =
-      options.minSourcePositions === undefined
-        ? CONFIG.minPositions
-        : Number(options.minSourcePositions);
+    const minSourcePositions = 1;
 
-    const minMatchedPositions =
-      options.minMatchedPositions === undefined
-        ? 4
-        : Number(options.minMatchedPositions);
+    const minMatchedPositions = 1;
 
-    if (
-      !Number.isInteger(minSourcePositions) ||
-      minSourcePositions < 1
-    ) {
-      throw new Error("Ngưỡng mẫu ban đầu không hợp lệ.");
-    }
+const regions = options.regions || REGION_CONFIG;
 
-    if (
-      !Number.isInteger(minMatchedPositions) ||
-      minMatchedPositions < 1
-    ) {
-      throw new Error("Ngưỡng vị trí khớp không hợp lệ.");
-    }
+validateRegions(regions);
 
-    const regions = options.regions || REGION_CONFIG;
+const [dayN, dayN1, dayN2, dayN3, dayN4] = days;
 
-    validateRegions(regions);
+// Tìm tất cả nhóm mẫu hợp lệ trên ngày N,
+// không yêu cầu tối thiểu 6 tọa độ.
+const sourceCreations = createAllPairs(dayN, regions);
 
-    const [dayN, dayN1, dayN2, dayN3, dayN4] = days;
+let patterns = groupCreations(sourceCreations, 1);
 
-    // Bước đầu tiên: chỉ tìm mẫu trên ngày N.
-    const sourceCreations = createAllPairs(dayN, regions);
-
-    let patterns = groupCreations(
-      sourceCreations,
-      minSourcePositions
-    );
-
-    const initialPatternCount = patterns.length;
+const initialPatternCount = patterns.length;
 
     const stages = [];
 
@@ -911,12 +891,11 @@ const matchedGroups = Array.from(groups.values())
       const [sourceDay, targetDay] = stageDays[i];
 
       const stageResult = runPart2Stage({
-        stageNumber: i + 1,
-        patterns,
-        sourceDay,
-        targetDay,
-        minMatchedPositions
-      });
+  stageNumber: i + 1,
+  patterns,
+  sourceDay,
+  targetDay
+});
 
       stages.push(stageResult);
 
@@ -960,10 +939,10 @@ const matchedGroups = Array.from(groups.values())
       },
 
       note:
-        "Phần 2 tìm mẫu ban đầu trên ngày N, sau đó chuyển tiếp " +
-        "chính xác các tọa độ còn khớp qua N-1, N-2, N-3 và N-4. " +
-        "Mỗi giai đoạn đối chiếu với kết quả thực tế của ngày nguồn " +
-        "và chỉ giữ nhóm đạt ngưỡng vị trí khớp."
+  "Phần 2 tìm tất cả mẫu hợp lệ trên ngày N, không giới hạn " +
+  "số tọa độ tối thiểu. Sau đó chuyển tiếp chính xác các tọa độ " +
+  "còn khớp qua N-1, N-2, N-3 và N-4. Mỗi giai đoạn chỉ loại " +
+  "nhóm khi không còn vị trí khớp."
     };
   }
 
