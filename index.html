@@ -1190,7 +1190,7 @@ function renderPart2(report) {
   if (finalGroups.length === 0) {
     finalBody.innerHTML = `
       <tr>
-        <td colspan="3">
+        <td colspan="2">
           Không có cặp nào còn vị trí khớp sau 4 giai đoạn.
         </td>
       </tr>
@@ -1198,47 +1198,42 @@ function renderPart2(report) {
     return;
   }
 
-  finalBody.innerHTML = finalGroups.map(group => {
-    const positions = Array.isArray(group.positions)
-      ? group.positions
-      : [];
+ 
+finalBody.innerHTML = finalGroups.map(group => {
+  const positions = Array.isArray(group.positions)
+    ? group.positions
+    : [];
 
-    const positionHtml = positions.length
-      ? positions.map((position, index) =>
-          renderPosition(position, index)
-        ).join("")
-      : "Không có tọa độ được lưu.";
+  const positionHtml = positions.length
+    ? positions.map((position, index) =>
+        renderPosition(position, index)
+      ).join("")
+    : "Không có tọa độ được lưu.";
 
-    const count = Number(
-      group.matchedPositions ?? positions.length
-    );
+  const count = Number(
+    group.matchedPositions ?? positions.length
+  );
 
-    return `
-      <tr>
-        <td>
-          <strong>${escapeHtml(group.canonical || group.pair)}</strong>
-        </td>
+  return `
+    <tr>
+      <td>
+        <strong>${escapeHtml(group.canonical || group.pair)}</strong>
+      </td>
 
-        <td>
-          <details class="part2-coordinate-details">
-            <summary title="Bấm để xem tọa độ còn khớp">
-              <strong>${escapeHtml(count)}</strong>
-            </summary>
+      <td>
+        <details class="part2-coordinate-details">
+          <summary title="Bấm để xem tọa độ còn khớp">
+            <strong>${escapeHtml(count)}</strong>
+          </summary>
 
-            <div class="part2-position-list">
-              ${positionHtml}
-            </div>
-          </details>
-        </td>
-
-        <td>
-          ${positions.length > 0
-            ? "Bấm vào số để xem tọa độ"
-            : "Không có tọa độ"}
-        </td>
-      </tr>
-    `;
-  }).join("");
+          <div class="part2-position-list">
+            ${positionHtml}
+          </div>
+        </details>
+      </td>
+    </tr>
+  `;
+}).join("");
 }
 
 
