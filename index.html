@@ -190,7 +190,7 @@
 
   <p class="muted">
     Đọc dữ liệu từ nguồn ketqua16.net thông qua Worker.
-    Thuật toán phiên bản 4.1.0 — ngưỡng tối thiểu 6 vị trí.
+    Thuật toán phiên bản 4.2.0 — Phần 1 và Phần 2 (chuỗi đối chiếu 5 ngày).
   </p>
 
   <!-- CHON NGAY VA DOC WORKER -->
@@ -306,7 +306,63 @@
       </table>
     </div>
   </section>
+  <!-- PHAN 2: CHUOI DOI CHIEU 5 NGAY -->
+  <section id="part2Panel" class="panel hidden">
+    <h2>Phần 2. Chuỗi đối chiếu liên tiếp 5 ngày</h2>
 
+    <p class="section-note">
+      Mẫu được tìm trên ngày N. Chỉ các tọa độ còn khớp ở
+      giai đoạn trước mới được chuyển tiếp sang giai đoạn tiếp theo.
+      Mỗi giai đoạn yêu cầu tối thiểu 4 vị trí khớp.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Giai đoạn</th>
+            <th>Ngày áp dụng</th>
+            <th>Ngày đối chiếu</th>
+            <th>Số mẫu đầu vào</th>
+            <th>Số vị trí đã áp dụng</th>
+            <th>Số vị trí khớp</th>
+            <th>Số nhóm cặp còn lại</th>
+          </tr>
+        </thead>
+        <tbody id="part2StageBody"></tbody>
+      </table>
+    </div>
+
+    <div class="metric-grid" id="part2Summary"></div>
+
+    <details style="margin-top:16px;">
+      <summary style="cursor:pointer;font-weight:bold;padding:10px 0;">
+        C. Các cặp còn đạt điều kiện sau 4 giai đoạn
+      </summary>
+
+      <p class="section-note">
+        Chỉ hiển thị các cặp còn ít nhất 4 vị trí khớp ở giai đoạn 4.
+        Số vị trí được thống kê riêng ở từng giai đoạn.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Cặp mẫu ban đầu</th>
+              <th>Khớp giai đoạn 1</th>
+              <th>Khớp giai đoạn 2</th>
+              <th>Khớp giai đoạn 3</th>
+              <th>Khớp giai đoạn 4</th>
+              <th>Tọa độ còn lại</th>
+            </tr>
+          </thead>
+          <tbody id="part2FinalBody"></tbody>
+        </table>
+      </div>
+    </details>
+  </section>
 </main>
 
 <script src="./algorithm.js"></script>
@@ -354,13 +410,14 @@
   }
 
   function hideResults() {
-    [
-      "summaryPanel",
-      "sourcePanel",
-      "targetPanel",
-      "comparisonPanel"
-    ].forEach(hidePanel);
-  }
+  [
+    "summaryPanel",
+    "sourcePanel",
+    "targetPanel",
+    "comparisonPanel",
+    "part2Panel"
+  ].forEach(hidePanel);
+}
 
   function clearBody(id) {
     $(id).replaceChildren();
@@ -536,71 +593,89 @@
     return true;
   }
 
-  async function readWorker(date) {
-    const url =
-      `${WORKER_URL}/read?date=${encodeURIComponent(date)}`;
+  
+async function readWorker(date) {
+  const url =
+    `${WORKER_URL}/read?date=${encodeURIComponent(date)}`;
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { "Accept": "application/json" },
-      cache: "no-store"
-    });
+  const response = await fetch(url, {
+    method: "GET",
+    headers: { "Accept": "application/json" },
+    cache: "no-store"
+  });
 
-    if (!response.ok) {
-      throw new Error(
-        `Worker trả về HTTP ${response.status}. Không thể đọc dữ liệu.`
-      );
-    }
-
-    let payload;
-
-    try {
-      payload = await response.json();
-    } catch (error) {
-      throw new Error("Worker không trả về JSON hợp lệ.");
-    }
-
-    if (!payload || payload.ok !== true) {
-      throw new Error(
-        payload?.error ||
-        payload?.message ||
-        "Worker báo không đọc được dữ liệu nguồn."
-      );
-    }
-
-    if (!payload.sourceDay || !payload.previousDay) {
-      throw new Error(
-        "JSON Worker thiếu sourceDay hoặc previousDay."
-      );
-    }
-
-    const sourceDay = extractPrizeArrays(
-      payload.sourceDay,
-      "Ngày N"
+  if (!response.ok) {
+    throw new Error(
+      `Worker trả về HTTP ${response.status}. Không thể đọc dữ liệu.`
     );
+  }
 
-    const previousDay = extractPrizeArrays(
-      payload.previousDay,
-      "Ngày N−1"
+  let payload;
+
+  try {
+    payload = await response.json();
+  } catch (error) {
+    throw new Error("Worker không trả về JSON hợp lệ.");
+  }
+
+  if (!payload || payload.ok !== true) {
+    throw new Error(
+      payload?.error ||
+      payload?.message ||
+      "Worker báo không đọc được dữ liệu nguồn."
     );
+  }
 
-    validateWorkerDay(sourceDay, "Ngày N", date);
+  if (!Array.isArray(payload.days) || payload.days.length !== 5) {
+    throw new Error(
+      "Worker chưa trả về đủ 5 ngày trong payload.days."
+    );
+  }
 
-    const expectedPrevious = getPreviousDate(date);
+  // Chuẩn hóa đủ 5 ngày theo thứ tự N đến N-4.
+  const days = payload.days.map((rawDay, index) => {
+    const labels = [
+      "Ngày N",
+      "Ngày N−1",
+      "Ngày N−2",
+      "Ngày N−3",
+      "Ngày N−4"
+    ];
+
+    return extractPrizeArrays(rawDay, labels[index]);
+  });
+
+  // Kiểm tra ngày liên tục.
+  for (let i = 0; i < 5; i++) {
+    const expectedDate = date
+      ? (() => {
+          const d = new Date(`${date}T12:00:00Z`);
+          d.setUTCDate(d.getUTCDate() - i);
+
+          return [
+            d.getUTCFullYear(),
+            String(d.getUTCMonth() + 1).padStart(2, "0"),
+            String(d.getUTCDate()).padStart(2, "0")
+          ].join("-");
+        })()
+      : "";
 
     validateWorkerDay(
-      previousDay,
-      "Ngày N−1",
-      expectedPrevious
+      days[i],
+      `Ngày thứ ${i + 1}`,
+      expectedDate
     );
-
-    return {
-      sourceDay,
-      previousDay,
-      workerVersion: payload.version || "Không rõ",
-      source: payload.source || ""
-    };
   }
+
+  return {
+    days,
+    sourceDay: days[0],
+    previousDay: days[1],
+    workerVersion: payload.version || "Không rõ",
+    source: payload.source || ""
+  };
+}
+
 
   // --------------------------------------------------
   // HIEN THI TONG QUAN
@@ -854,6 +929,7 @@
   // CHAY TOAN BO QUY TRINH
   // --------------------------------------------------
 
+
   async function runAnalysis() {
     const date = $("selectedDate").value;
 
@@ -864,12 +940,18 @@
 
     const algorithm = window.XSMBAlgorithm;
 
-    if (!algorithm || typeof algorithm.analyze !== "function") {
+    if (
+      !algorithm ||
+      typeof algorithm.analyze !== "function" ||
+      typeof algorithm.analyzePart2 !== "function"
+    ) {
       hideResults();
+
       setStatus(
-        "Không tải được algorithm.js hoặc không tìm thấy hàm analyze().",
+        "Không tải được algorithm.js phiên bản 4.2.0 hoặc thiếu hàm analyzePart2().",
         "error"
       );
+
       return;
     }
 
@@ -878,28 +960,39 @@
 
     try {
       setStatus(
-        `Đang gọi Worker để đọc ngày ${formatDate(date)} và ngày liền trước...`,
+        `Đang gọi Worker để đọc 5 ngày từ ${formatDate(date)}...`,
         ""
       );
 
       const workerInfo = await readWorker(date);
 
+      const days = workerInfo.days;
+
       setStatus(
-        "Đã nhận dữ liệu Worker. Đang kiểm tra cấu trúc và số lượng kết quả...",
+        "Đã nhận đủ 5 ngày. Đang kiểm tra cấu trúc và số lượng kết quả...",
         ""
       );
 
-      algorithm.validateDay(workerInfo.sourceDay, "ngày N");
-      algorithm.validateDay(workerInfo.previousDay, "ngày N−1");
+      // Kiểm tra toàn bộ dữ liệu 5 ngày.
+      days.forEach((day, index) => {
+        algorithm.validateDay(
+          day,
+          `ngày thứ ${index + 1}`
+        );
+      });
 
       setStatus(
-        "Dữ liệu hợp lệ. Đang tìm mẫu, chuyển tọa độ và đối chiếu...",
+        "Dữ liệu hợp lệ. Đang chạy Phần 1...",
         ""
       );
+
+      // ==================================
+      // PHAN 1 - GIU NGUYEN THUAT TOAN CU
+      // ==================================
 
       const report = algorithm.analyze(
-        workerInfo.sourceDay,
-        workerInfo.previousDay,
+        days[0],
+        days[1],
         { minPositions: 6 }
       );
 
@@ -909,31 +1002,73 @@
         !Array.isArray(report.applied) ||
         !Array.isArray(report.matchedGroups)
       ) {
-        throw new Error("Kết quả thuật toán không đúng cấu trúc.");
+        throw new Error(
+          "Kết quả Phần 1 không đúng cấu trúc."
+        );
       }
 
+      // ==================================
+      // PHAN 2 - CHUOI DOI CHIEU 5 NGAY
+      // ==================================
+
+      setStatus(
+        "Phần 1 hoàn tất. Đang chạy Phần 2 qua 4 giai đoạn...",
+        ""
+      );
+
+      const reportPart2 = algorithm.analyzePart2(
+        days,
+        {
+          minSourcePositions: 6,
+          minMatchedPositions: 4
+        }
+      );
+
+      if (
+        !reportPart2 ||
+        !Array.isArray(reportPart2.stages) ||
+        reportPart2.stages.length !== 4 ||
+        !Array.isArray(reportPart2.finalGroups)
+      ) {
+        throw new Error(
+          "Kết quả Phần 2 không đúng cấu trúc."
+        );
+      }
+
+      // ==================================
+      // HIEN THI KET QUA
+      // ==================================
+
+      // Phần 1.
       renderSummary(report, workerInfo);
       renderSource(report);
       renderApplied(report);
       renderComparison(report);
 
+      // Phần 2.
+      renderPart2(reportPart2);
+
       setStatus(
-        `Hoàn tất. Đã đọc đúng ngày ${formatDate(report.sourceDate)} ` +
-        `và ngày ${formatDate(report.targetDate)}. ` +
-        `Tìm được ${report.qualifiedPatternCount} mẫu đủ điều kiện, ` +
-        `có ${report.matchedPairGroupCount} cặp mẫu khớp.`,
+        `Hoàn tất phân tích 5 ngày từ ${formatDate(days[0].date)} ` +
+        `đến ${formatDate(days[4].date)}. ` +
+        `Phần 1: ${report.matchedPairGroupCount} nhóm cặp khớp. ` +
+        `Phần 2: còn ${reportPart2.finalGroups.length} nhóm cặp ` +
+        `sau 4 giai đoạn.`,
         "success"
       );
 
       console.log("XSMB Worker input:", workerInfo);
-      console.log("XSMB Algorithm report:", report);
+      console.log("XSMB Part 1 report:", report);
+      console.log("XSMB Part 2 report:", reportPart2);
 
     } catch (error) {
       hideResults();
 
       setStatus(
         "DỪNG PHÂN TÍCH: " +
-        (error && error.message ? error.message : String(error)),
+        (error && error.message
+          ? error.message
+          : String(error)),
         "error"
       );
 
