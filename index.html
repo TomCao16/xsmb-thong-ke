@@ -7,9 +7,7 @@
   <title>XSMB Thống Kê</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -25,23 +23,10 @@
       margin: 0 auto;
     }
 
-    h1 {
-      margin: 0 0 8px;
-      font-size: 27px;
-    }
+    h1 { margin: 0 0 8px; font-size: 27px; }
+    h2 { margin: 0 0 14px; font-size: 20px; }
 
-    h2 {
-      margin: 0 0 14px;
-      font-size: 20px;
-    }
-
-    h3 {
-      margin: 18px 0 10px;
-      font-size: 16px;
-    }
-
-    .muted,
-    .section-note {
+    .muted, .section-note {
       color: #667085;
       font-size: 13px;
     }
@@ -96,10 +81,6 @@
       cursor: not-allowed;
     }
 
-    button.secondary {
-      background: #475467;
-    }
-
     .status {
       margin-top: 14px;
       padding: 11px 13px;
@@ -110,20 +91,9 @@
       overflow-wrap: anywhere;
     }
 
-    .status.success {
-      background: #ecfdf3;
-      color: #067647;
-    }
-
-    .status.error {
-      background: #fef3f2;
-      color: #b42318;
-    }
-
-    .status.warning {
-      background: #fffaeb;
-      color: #b54708;
-    }
+    .status.success { background: #ecfdf3; color: #067647; }
+    .status.error { background: #fef3f2; color: #b42318; }
+    .status.warning { background: #fffaeb; color: #b54708; }
 
     .metric-grid {
       display: grid;
@@ -138,10 +108,7 @@
       border-radius: 7px;
     }
 
-    .metric-label {
-      color: #667085;
-      font-size: 12px;
-    }
+    .metric-label { color: #667085; font-size: 12px; }
 
     .metric-value {
       margin-top: 5px;
@@ -161,8 +128,7 @@
       font-size: 13px;
     }
 
-    th,
-    td {
+    th, td {
       padding: 9px 10px;
       border: 1px solid #e4e7ec;
       text-align: left;
@@ -190,11 +156,10 @@
     .detail {
       min-width: 250px;
       line-height: 1.6;
+      white-space: pre-line;
     }
 
-    .detail-line {
-      margin-bottom: 4px;
-    }
+    .detail-line { margin-bottom: 4px; }
 
     .tag {
       display: inline-block;
@@ -205,44 +170,15 @@
       white-space: nowrap;
     }
 
-    .tag-red {
-      background: #fef3f2;
-      color: #b42318;
-    }
+    .tag-red { background: #fef3f2; color: #b42318; }
+    .tag-black { background: #f2f4f7; color: #344054; }
 
-    .tag-black {
-      background: #f2f4f7;
-      color: #344054;
-    }
-
-    pre {
-      max-height: 600px;
-      overflow: auto;
-      padding: 13px;
-      background: #f8fafc;
-      border: 1px solid #e4e7ec;
-      border-radius: 6px;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      font-size: 12px;
-    }
-
-    .hidden {
-      display: none !important;
-    }
+    .hidden { display: none !important; }
 
     @media (max-width: 600px) {
-      body {
-        padding: 10px;
-      }
-
-      .panel {
-        padding: 13px;
-      }
-
-      h1 {
-        font-size: 22px;
-      }
+      body { padding: 10px; }
+      .panel { padding: 13px; }
+      h1 { font-size: 22px; }
     }
   </style>
 </head>
@@ -254,7 +190,7 @@
 
   <p class="muted">
     Đọc dữ liệu từ nguồn ketqua16.net thông qua Worker.
-    Thuật toán phiên bản 4.0.0 — ngưỡng tối thiểu 6 vị trí.
+    Thuật toán phiên bản 4.1.0 — ngưỡng tối thiểu 6 vị trí.
   </p>
 
   <!-- CHON NGAY VA DOC WORKER -->
@@ -342,13 +278,15 @@
     </div>
   </section>
 
-  <!-- C: CHI HIEN THI CAP KHOP -->
+  <!-- C: NHOM THEO CAP MAU NGAY N -->
   <section id="comparisonPanel" class="panel hidden">
     <h2>C. Các cặp khớp với kết quả thực tế ngày N</h2>
 
     <p class="section-note">
-      Chỉ hiển thị cặp tạo trên ngày N−1 có đuôi trùng với
-      kết quả thực tế DB đến G7 ngày N. Chấp nhận cả cặp đảo chiều.
+      Nhóm theo cặp mẫu ngày N. Mỗi vị trí của mẫu được áp dụng
+      sang ngày N−1 để tạo một cặp mới. Chỉ những cặp tạo trên
+      N−1 khớp đuôi kết quả DB đến G7 ngày N mới được tính.
+      Chấp nhận cả cặp đảo chiều.
     </p>
 
     <div class="table-wrap">
@@ -356,25 +294,17 @@
         <thead>
           <tr>
             <th>STT</th>
-            <th>Cặp tạo trên N−1</th>
-            <th>Cặp tạo trên ngày N</th>
-            <th>Kết quả ngày N khớp</th>
+            <th>Cặp mẫu ngày N</th>
+            <th>Tổng vị trí mẫu</th>
+            <th>Số cặp tạo trên N−1</th>
+            <th>Số cặp khớp</th>
+            <th>Các cặp tạo trên N−1 khớp</th>
+            <th>Kết quả thực tế ngày N khớp</th>
           </tr>
         </thead>
         <tbody id="matchedBody"></tbody>
       </table>
     </div>
-  </section>
-
-  <!-- JSON -->
-  <section id="jsonPanel" class="panel hidden">
-    <h2>D. Dữ liệu JSON kết quả</h2>
-
-    <div class="toolbar">
-      <button id="copyButton" class="secondary">SAO CHÉP JSON</button>
-    </div>
-
-    <pre id="jsonOutput"></pre>
   </section>
 
 </main>
@@ -389,25 +319,13 @@
     "https://xsmb-thong-ke-reader.czcaonguyen.workers.dev";
 
   const EXPECTED_COUNTS = {
-    DB: 1,
-    G1: 1,
-    G2: 2,
-    G3: 6,
-    G4: 4,
-    G5: 6,
-    G6: 3,
-    G7: 4
+    DB: 1, G1: 1, G2: 2, G3: 6,
+    G4: 4, G5: 6, G6: 3, G7: 4
   };
 
   const EXPECTED_LENGTHS = {
-    DB: 5,
-    G1: 5,
-    G2: 5,
-    G3: 5,
-    G4: 4,
-    G5: 4,
-    G6: 3,
-    G7: 2
+    DB: 5, G1: 5, G2: 5, G3: 5,
+    G4: 4, G5: 4, G6: 3, G7: 2
   };
 
   const PRIZES = [
@@ -416,8 +334,6 @@
   ];
 
   const $ = id => document.getElementById(id);
-
-  let lastReport = null;
 
   // --------------------------------------------------
   // CAC HAM GIAO DIEN
@@ -442,8 +358,7 @@
       "summaryPanel",
       "sourcePanel",
       "targetPanel",
-      "comparisonPanel",
-      "jsonPanel"
+      "comparisonPanel"
     ].forEach(hidePanel);
   }
 
@@ -453,6 +368,7 @@
 
   function addCell(row, value, className) {
     const cell = document.createElement("td");
+
     cell.textContent =
       value === null || value === undefined ? "" : String(value);
 
@@ -471,6 +387,7 @@
 
   function addText(parent, tag, value, className) {
     const element = document.createElement(tag || "div");
+
     element.textContent =
       value === null || value === undefined ? "" : String(value);
 
@@ -517,29 +434,13 @@
     return String(value).trim().replace(/\s+/g, "");
   }
 
-  /*
-   * Ho tro hai dang:
-   *
-   * 1. results la object:
-   *    { DB: [...], G1: [...], ... }
-   *
-   * 2. results la mang ban ghi:
-   *    [{ prize: "DB", number: "..." }, ...]
-   *
-   * Du lieu khong nhan dien duoc se bi tu choi,
-   * khong tu tao gia tri thay the.
-   */
-
   function extractPrizeArrays(day, label) {
     if (!day || typeof day !== "object") {
       throw new Error(`${label}: dữ liệu ngày không hợp lệ.`);
     }
 
     const rawResults = day.results || day;
-
-    const normalized = {
-      date: day.date
-    };
+    const normalized = { date: day.date };
 
     if (
       rawResults &&
@@ -641,9 +542,7 @@
 
     const response = await fetch(url, {
       method: "GET",
-      headers: {
-        "Accept": "application/json"
-      },
+      headers: { "Accept": "application/json" },
       cache: "no-store"
     });
 
@@ -719,7 +618,7 @@
       ["Lượt áp dụng tọa độ", report.appliedPositionCount],
       ["Lượt áp dụng hợp lệ", report.validAppliedPositionCount],
       ["Lượt vị trí khớp", report.matchedPositionCount],
-      ["Nhóm cặp khớp", report.matchedPairGroupCount]
+      ["Nhóm cặp mẫu khớp", report.matchedPairGroupCount]
     ];
 
     const container = $("summaryContent");
@@ -736,7 +635,6 @@
     }
 
     $("algorithmNote").textContent = report.note || "";
-
     showPanel("summaryPanel");
   }
 
@@ -864,10 +762,7 @@
 
     if (!report.applied.length) {
       addRow(body, [
-        "",
-        "",
-        "",
-        "",
+        "", "", "", "",
         "Không có tọa độ được áp dụng.",
         ""
       ]);
@@ -877,8 +772,14 @@
   }
 
   // --------------------------------------------------
-  // C. CHI HIEN THI CAC CAP KHOP
+  // C. NHOM THEO CAP MAU NGAY N
   // --------------------------------------------------
+
+  function formatMatchedPairs(positions) {
+    return positions.map((item, index) => {
+      return `${index + 1}. ${item.appliedPair}`;
+    }).join("\n");
+  }
 
   function formatMatchedResults(results) {
     if (!Array.isArray(results) || !results.length) {
@@ -902,20 +803,29 @@
     report.matchedGroups.forEach((group, index) => {
       const row = document.createElement("tr");
 
-      // Cot 1: STT
+      // 1. STT
       addCell(row, index + 1);
 
-      // Cot 2: Cap tao tren N-1
+      // 2. Cap mau ngay N
       addCell(row, group.pair, "pair matched");
 
-      // Cot 3: Cap mau tao tren ngay N
+      // 3. Tong vi tri mau ngay N
+      addCell(row, group.totalPositions);
+
+      // 4. So cap da tao tren N-1
+      addCell(row, group.appliedPositions);
+
+      // 5. So vi tri tao cap khop ket qua ngay N
+      addCell(row, group.matchedPositions, "matched");
+
+      // 6. Cac cap tao tren N-1 khop
       addCell(
         row,
-        group.sourcePairs.join(", "),
-        "pair"
+        formatMatchedPairs(group.positions),
+        "detail"
       );
 
-      // Cot 4: Ket qua ngay N khop
+      // 7. Ket qua thuc te ngay N khop
       addCell(
         row,
         formatMatchedResults(group.matchedResults),
@@ -928,9 +838,12 @@
     if (!report.matchedGroups.length) {
       addRow(body, [
         "",
-        "Không có cặp khớp",
+        "Không có cặp mẫu khớp",
         "",
-        "Không có cặp tạo trên N−1 trùng với đuôi kết quả ngày N."
+        "",
+        "0",
+        "",
+        "Không có vị trí tạo cặp nào khớp với kết quả ngày N."
       ]);
     }
 
@@ -961,7 +874,6 @@
     }
 
     $("runButton").disabled = true;
-    lastReport = null;
     hideResults();
 
     try {
@@ -977,7 +889,6 @@
         ""
       );
 
-      // Kiem tra lai bang validator cua algorithm.
       algorithm.validateDay(workerInfo.sourceDay, "ngày N");
       algorithm.validateDay(workerInfo.previousDay, "ngày N−1");
 
@@ -1001,32 +912,16 @@
         throw new Error("Kết quả thuật toán không đúng cấu trúc.");
       }
 
-      lastReport = report;
-
       renderSummary(report, workerInfo);
       renderSource(report);
       renderApplied(report);
       renderComparison(report);
 
-      $("jsonOutput").textContent = JSON.stringify({
-        worker: {
-          version: workerInfo.workerVersion,
-          source: workerInfo.source
-        },
-        input: {
-          sourceDay: workerInfo.sourceDay,
-          previousDay: workerInfo.previousDay
-        },
-        report
-      }, null, 2);
-
-      showPanel("jsonPanel");
-
       setStatus(
         `Hoàn tất. Đã đọc đúng ngày ${formatDate(report.sourceDate)} ` +
         `và ngày ${formatDate(report.targetDate)}. ` +
         `Tìm được ${report.qualifiedPatternCount} mẫu đủ điều kiện, ` +
-        `có ${report.matchedPairGroupCount} nhóm cặp khớp.`,
+        `có ${report.matchedPairGroupCount} cặp mẫu khớp.`,
         "success"
       );
 
@@ -1050,30 +945,6 @@
   }
 
   $("runButton").addEventListener("click", runAnalysis);
-
-  // --------------------------------------------------
-  // SAO CHEP JSON
-  // --------------------------------------------------
-
-  $("copyButton").addEventListener("click", async () => {
-    if (!lastReport) {
-      setStatus("Chưa có dữ liệu JSON để sao chép.", "warning");
-      return;
-    }
-
-    const json = $("jsonOutput").textContent;
-
-    try {
-      await navigator.clipboard.writeText(json);
-      setStatus("Đã sao chép JSON thành công.", "success");
-    } catch (error) {
-      setStatus(
-        "Trình duyệt không cho phép sao chép tự động. " +
-        "Bạn có thể chọn nội dung JSON và sao chép thủ công.",
-        "warning"
-      );
-    }
-  });
 
   // Mac dinh ngay hien tai theo gio may nguoi dung.
   function setDefaultDate() {
