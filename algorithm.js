@@ -19,7 +19,7 @@
 (function (root) {
   "use strict";
 
-  const VERSION = "4.1.0";
+  const VERSION = "4.2.0";
 
   const CONFIG = Object.freeze({
     minPositions: 6,
@@ -986,7 +986,7 @@ const matchedGroups = Array.from(groups.values())
     matchActualResults,
     getPreviousDate,
     validateFiveDays,
-    analyzePart2
+    analyzePart2,
     analyze
   };
 
