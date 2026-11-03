@@ -7,11 +7,13 @@
   <title>XSMB Thống Kê</title>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
-      padding: 20px;
+      padding: 18px;
       background: #f3f5f8;
       color: #202939;
       font-family: Arial, Helvetica, sans-serif;
@@ -19,31 +21,44 @@
     }
 
     main {
-      max-width: 1500px;
+      max-width: 1350px;
       margin: 0 auto;
     }
 
-    h1 { margin: 0 0 8px; font-size: 27px; }
-    h2 { margin: 0 0 14px; font-size: 20px; }
+    h1 {
+      margin: 0 0 5px;
+      font-size: 25px;
+    }
 
-    .muted, .section-note {
+    h2 {
+      margin: 0 0 13px;
+      font-size: 18px;
+    }
+
+    p {
+      margin-top: 7px;
+      margin-bottom: 10px;
+    }
+
+    .muted,
+    .section-note {
       color: #667085;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .panel {
-      margin: 16px 0;
-      padding: 18px;
+      margin: 13px 0;
+      padding: 15px;
       background: #fff;
       border: 1px solid #e1e6ef;
-      border-radius: 10px;
-      box-shadow: 0 2px 7px rgba(16, 24, 40, 0.04);
+      border-radius: 9px;
+      box-shadow: 0 2px 6px rgba(16, 24, 40, 0.035);
     }
 
     .toolbar {
       display: flex;
       align-items: end;
-      gap: 12px;
+      gap: 11px;
       flex-wrap: wrap;
     }
 
@@ -59,31 +74,31 @@
     }
 
     input[type="date"] {
-      min-width: 190px;
-      padding: 10px 12px;
+      min-width: 185px;
+      padding: 9px 11px;
       border: 1px solid #cbd2df;
       border-radius: 6px;
-      font-size: 15px;
+      font-size: 14px;
     }
 
     button {
-      padding: 11px 17px;
+      padding: 10px 16px;
       border: 0;
       border-radius: 6px;
       background: #175cd3;
-      color: white;
+      color: #fff;
       font-weight: bold;
       cursor: pointer;
     }
 
     button:disabled {
-      opacity: 0.55;
+      opacity: .55;
       cursor: not-allowed;
     }
 
     .status {
-      margin-top: 14px;
-      padding: 11px 13px;
+      margin-top: 12px;
+      padding: 10px 12px;
       border-radius: 6px;
       background: #f2f4f7;
       color: #344054;
@@ -91,31 +106,96 @@
       overflow-wrap: anywhere;
     }
 
-    .status.success { background: #ecfdf3; color: #067647; }
-    .status.error { background: #fef3f2; color: #b42318; }
-    .status.warning { background: #fffaeb; color: #b54708; }
+    .status.success {
+      background: #ecfdf3;
+      color: #067647;
+    }
 
-    .metric-grid {
+    .status.error {
+      background: #fef3f2;
+      color: #b42318;
+    }
+
+    .status.warning {
+      background: #fffaeb;
+      color: #b54708;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* TONG QUAN */
+
+    .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 10px;
     }
 
-    .metric {
-      padding: 13px;
+    .summary-card {
+      min-width: 0;
+      padding: 12px;
       background: #f8fafc;
       border: 1px solid #e4e7ec;
       border-radius: 7px;
     }
 
-    .metric-label { color: #667085; font-size: 12px; }
-
-    .metric-value {
-      margin-top: 5px;
-      font-size: 22px;
-      font-weight: bold;
-      overflow-wrap: anywhere;
+    .summary-card.version-card {
+      grid-column: 1 / -1;
+      background: #eef4ff;
+      border-color: #d6e4ff;
     }
+
+    .summary-label {
+      margin-bottom: 7px;
+      color: #667085;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .summary-number {
+      color: #175cd3;
+      font-size: 23px;
+      font-weight: bold;
+    }
+
+    .pair-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pair-chip {
+      display: inline-block;
+      min-width: 35px;
+      padding: 4px 8px;
+      border: 1px solid #d6e4ff;
+      border-radius: 5px;
+      background: #fff;
+      color: #175cd3;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .pair-chip.green {
+      border-color: #abefc6;
+      color: #067647;
+    }
+
+    .pair-chip.final {
+      border-color: #f5d08a;
+      color: #9a6700;
+    }
+
+    .empty-list {
+      color: #98a2b3;
+      font-size: 12px;
+      font-style: italic;
+    }
+
+    /* BANG */
 
     .table-wrap {
       width: 100%;
@@ -128,8 +208,9 @@
       font-size: 13px;
     }
 
-    th, td {
-      padding: 9px 10px;
+    th,
+    td {
+      padding: 8px 9px;
       border: 1px solid #e4e7ec;
       text-align: left;
       vertical-align: top;
@@ -138,13 +219,14 @@
 
     th {
       background: #f2f4f7;
+      color: #344054;
       white-space: nowrap;
     }
 
     .pair {
       color: #175cd3;
-      font-weight: bold;
       font-size: 15px;
+      font-weight: bold;
       white-space: nowrap;
     }
 
@@ -154,12 +236,14 @@
     }
 
     .detail {
-      min-width: 250px;
+      min-width: 220px;
       line-height: 1.6;
       white-space: pre-line;
     }
 
-    .detail-line { margin-bottom: 4px; }
+    .detail-line {
+      margin-bottom: 4px;
+    }
 
     .tag {
       display: inline-block;
@@ -170,74 +254,149 @@
       white-space: nowrap;
     }
 
-    .tag-red { background: #fef3f2; color: #b42318; }
-    .tag-black { background: #f2f4f7; color: #344054; }
-
-    .hidden { display: none !important; }
-
-    @media (max-width: 600px) {
-      body { padding: 10px; }
-      .panel { padding: 13px; }
-      h1 { font-size: 22px; }
+    .tag-red {
+      background: #fef3f2;
+      color: #b42318;
     }
-        .part2-position-list {
-      margin-top: 10px;
+
+    .tag-black {
+      background: #f2f4f7;
+      color: #344054;
+    }
+
+    /* VUNG THU GON */
+
+    .fold-box {
+      margin: 8px 0;
+      border: 1px solid #e4e7ec;
+      border-radius: 7px;
+      background: #fff;
+    }
+
+    .fold-box > summary {
+      padding: 10px 12px;
+      color: #344054;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      list-style-position: inside;
+    }
+
+    .fold-box > summary:hover {
+      background: #f8fafc;
+    }
+
+    .fold-content {
+      padding: 0 11px 11px;
+    }
+
+    .source-details {
+      margin: 0;
+    }
+
+    .source-details summary {
+      color: #175cd3;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .source-position-list {
+      max-height: 280px;
+      margin-top: 8px;
+      padding: 8px;
+      overflow-y: auto;
+      border: 1px solid #e4e7ec;
+      border-radius: 6px;
+      background: #fafbfc;
+    }
+
+    .source-position {
+      padding: 7px 5px;
+      border-bottom: 1px solid #eaecf0;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .source-position:last-child {
+      border-bottom: 0;
+    }
+
+    /* CHI TIET PHAN 2 */
+
+    .part2-coordinate-details {
+      display: inline-block;
+    }
+
+    .part2-coordinate-details summary {
+      padding: 4px 8px;
+      color: #175cd3;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .part2-coordinate-details[open] {
+      display: block;
+      min-width: 250px;
+    }
+
+    .part2-position-list {
+      max-height: 350px;
+      margin-top: 8px;
+      padding: 8px;
+      overflow-y: auto;
+      border: 1px solid #e4e7ec;
+      border-radius: 6px;
+      background: #fafbfc;
     }
 
     .part2-position {
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #d8d8d8;
+      margin: 7px 0;
+      padding: 9px;
+      border: 1px solid #e4e7ec;
       border-radius: 6px;
-      line-height: 1.7;
+      background: #fff;
+      font-size: 12px;
+      line-height: 1.65;
       overflow-wrap: anywhere;
     }
 
     .part2-position strong {
-      font-weight: 600;
+      color: #344054;
     }
 
-    .part2-position details,
-    .part2-position-list summary {
-      cursor: pointer;
+    @media (max-width: 600px) {
+      body {
+        padding: 9px;
+      }
+
+      .panel {
+        padding: 11px;
+      }
+
+      h1 {
+        font-size: 21px;
+      }
+
+      h2 {
+        font-size: 16px;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-card.version-card {
+        grid-column: auto;
+      }
+
+      th,
+      td {
+        padding: 7px;
+        font-size: 12px;
+      }
     }
-
-    .part2-position-list summary {
-      padding: 6px 0;
-      font-weight: 600;
-    }
-    
-.part2-coordinate-details {
-  display: inline-block;
-}
-
-.part2-coordinate-details summary {
-  cursor: pointer;
-  color: #175cd3;
-  text-decoration: underline;
-  font-size: 16px;
-  padding: 4px 8px;
-}
-
-.part2-coordinate-details[open] {
-  display: block;
-  min-width: 250px;
-}
-
-.part2-coordinate-details .part2-position-list {
-  margin-top: 10px;
-  text-align: left;
-}
-
-.part2-position {
-  padding: 10px;
-  margin: 8px 0;
-  border: 1px solid #d8d8d8;
-  border-radius: 6px;
-  line-height: 1.7;
-  overflow-wrap: anywhere;
-}
-
   </style>
 </head>
 
@@ -247,25 +406,30 @@
   <h1>Thống kê xổ số miền Bắc</h1>
 
   <p class="muted">
-    Đọc dữ liệu từ nguồn ketqua16.net thông qua Worker.
-    Thuật toán phiên bản 4.2.0 — Phần 1 và Phần 2 (chuỗi đối chiếu 5 ngày).
+    Đọc dữ liệu từ ketqua16.net thông qua Worker.
+    Thuật toán phiên bản 4.2.0 — Phần 1 và Phần 2.
   </p>
 
-  <!-- CHON NGAY VA DOC WORKER -->
+  <!-- CHON NGAY -->
   <section class="panel">
     <h2>Chọn ngày thống kê</h2>
 
     <div class="toolbar">
       <div class="field">
-        <label for="selectedDate">Ngày N — ngày tìm mẫu và đối chiếu</label>
+        <label for="selectedDate">
+          Ngày N — ngày tìm mẫu và đối chiếu
+        </label>
         <input type="date" id="selectedDate" required>
       </div>
 
-      <button id="runButton">ĐỌC NGUỒN VÀ CHẠY THUẬT TOÁN</button>
+      <button id="runButton">
+        ĐỌC NGUỒN VÀ CHẠY THUẬT TOÁN
+      </button>
     </div>
 
     <div id="status" class="status">
-      Chọn ngày cần thống kê, sau đó nhấn “ĐỌC NGUỒN VÀ CHẠY THUẬT TOÁN”.
+      Chọn ngày cần thống kê, sau đó nhấn
+      “ĐỌC NGUỒN VÀ CHẠY THUẬT TOÁN”.
     </div>
 
     <p class="muted">
@@ -282,8 +446,7 @@
   <!-- TONG QUAN -->
   <section id="summaryPanel" class="panel hidden">
     <h2>Kết quả tổng quan</h2>
-    <div id="summaryContent" class="metric-grid"></div>
-    <p id="algorithmNote" class="muted"></p>
+    <div id="summaryContent" class="summary-grid"></div>
   </section>
 
   <!-- A: MAU NGAY N -->
@@ -291,8 +454,8 @@
     <h2>A. Mẫu tìm được trên ngày N</h2>
 
     <p class="section-note">
-      Chỉ hiển thị các cặp đạt ít nhất 6 tọa độ khác nhau.
-      Cặp đảo chiều được nhóm chung; từng vị trí tạo cặp vẫn được giữ lại.
+      Hiển thị cặp mẫu và số vị trí. Bấm vào chi tiết để xem
+      các tọa độ tạo mẫu.
     </p>
 
     <div class="table-wrap">
@@ -302,7 +465,7 @@
             <th>STT</th>
             <th>Cặp mẫu</th>
             <th>Số vị trí</th>
-            <th>Chi tiết từng vị trí</th>
+            <th>Chi tiết</th>
           </tr>
         </thead>
         <tbody id="sourceBody"></tbody>
@@ -312,115 +475,76 @@
 
   <!-- B: AP DUNG N-1 -->
   <section id="targetPanel" class="panel hidden">
-    <h2>B. Áp dụng tọa độ sang ngày N−1</h2>
+    <details class="fold-box">
+      <summary>
+        B. Áp dụng tọa độ sang ngày N−1 — bấm để xem chi tiết
+      </summary>
 
-    <p class="section-note">
-      Giữ nguyên tọa độ của mẫu ngày N và lấy chữ số tại đúng
-      các tọa độ đó trên dữ liệu ngày N−1 để tạo cặp mới.
-    </p>
+      <div class="fold-content">
+        <p class="section-note">
+          Giữ nguyên tọa độ của mẫu ngày N và lấy chữ số tại đúng
+          các tọa độ đó trên dữ liệu ngày N−1 để tạo cặp mới.
+        </p>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>STT</th>
-            <th>Cặp mẫu ngày N</th>
-            <th>Cặp tạo trên N−1</th>
-            <th>Vùng</th>
-            <th>Chi tiết tọa độ</th>
-            <th>Trạng thái</th>
-          </tr>
-        </thead>
-        <tbody id="targetBody"></tbody>
-      </table>
-    </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>Cặp mẫu ngày N</th>
+                <th>Cặp tạo trên N−1</th>
+                <th>Vùng</th>
+                <th>Chi tiết tọa độ</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody id="targetBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
   </section>
 
-  <!-- C: NHOM THEO CAP MAU NGAY N -->
+  <!-- C: DOI CHIEU NGAY N -->
   <section id="comparisonPanel" class="panel hidden">
     <h2>C. Các cặp khớp với kết quả thực tế ngày N</h2>
 
-    <p class="section-note">
-      Nhóm theo cặp mẫu ngày N. Mỗi vị trí của mẫu được áp dụng
-      sang ngày N−1 để tạo một cặp mới. Chỉ những cặp tạo trên
-      N−1 khớp đuôi kết quả DB đến G7 ngày N mới được tính.
-      Chấp nhận cả cặp đảo chiều.
-    </p>
-
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>STT</th>
             <th>Cặp mẫu ngày N</th>
             <th>Tổng vị trí mẫu</th>
             <th>Số cặp tạo trên N−1</th>
-            <th>Số cặp khớp</th>
-            <th>Các cặp tạo trên N−1 khớp</th>
-            <th>Kết quả thực tế ngày N khớp</th>
+            <th>Số cặp khớp còn lại</th>
           </tr>
         </thead>
         <tbody id="matchedBody"></tbody>
       </table>
     </div>
   </section>
-  <!-- PHAN 2: CHUOI DOI CHIEU 5 NGAY -->
+
+  <!-- PHAN 2 -->
   <section id="part2Panel" class="panel hidden">
-    <h2>Phần 2. Chuỗi đối chiếu liên tiếp 5 ngày</h2>
+    <h2>Phần 2. Các cặp còn đạt điều kiện sau 4 giai đoạn</h2>
 
     <p class="section-note">
-      Mẫu được tìm trên ngày N. Chỉ các tọa độ còn khớp ở
-      giai đoạn trước mới được chuyển tiếp sang giai đoạn tiếp theo.
-      Mỗi giai đoạn yêu cầu tối thiểu 4 vị trí khớp.
+      Bấm vào số vị trí để xem chi tiết tọa độ còn khớp.
     </p>
 
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Giai đoạn</th>
-            <th>Ngày áp dụng</th>
-            <th>Ngày đối chiếu</th>
-            <th>Số mẫu đầu vào</th>
-            <th>Số vị trí đã áp dụng</th>
-            <th>Số vị trí khớp</th>
-            <th>Số nhóm cặp còn lại</th>
+            <th>Cặp mẫu ban đầu</th>
+            <th>Số vị trí còn lại</th>
           </tr>
         </thead>
-        <tbody id="part2StageBody"></tbody>
+        <tbody id="part2FinalBody"></tbody>
       </table>
     </div>
-
-    <div class="metric-grid" id="part2Summary"></div>
-
-    <details style="margin-top:16px;">
-      <summary style="cursor:pointer;font-weight:bold;padding:10px 0;">
-        C. Các cặp còn đạt điều kiện sau 4 giai đoạn
-      </summary>
-
-      <p class="section-note">
-        Chỉ hiển thị các cặp còn ít nhất 4 vị trí khớp ở giai đoạn 4.
-        Số vị trí được thống kê riêng ở từng giai đoạn.
-      </p>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>STT</th>
-              <th>Cặp mẫu ban đầu</th>
-              <th>Khớp giai đoạn 1</th>
-              <th>Khớp giai đoạn 2</th>
-              <th>Khớp giai đoạn 3</th>
-              <th>Khớp giai đoạn 4</th>
-              <th>Tọa độ còn lại</th>
-            </tr>
-          </thead>
-          <tbody id="part2FinalBody"></tbody>
-        </table>
-      </div>
-    </details>
   </section>
+
 </main>
 
 <script src="./algorithm.js"></script>
@@ -449,9 +573,9 @@
 
   const $ = id => document.getElementById(id);
 
-  // --------------------------------------------------
+  // ==========================================
   // CAC HAM GIAO DIEN
-  // --------------------------------------------------
+  // ==========================================
 
   function setStatus(message, type) {
     const status = $("status");
@@ -468,14 +592,14 @@
   }
 
   function hideResults() {
-  [
-    "summaryPanel",
-    "sourcePanel",
-    "targetPanel",
-    "comparisonPanel",
-    "part2Panel"
-  ].forEach(hidePanel);
-}
+    [
+      "summaryPanel",
+      "sourcePanel",
+      "targetPanel",
+      "comparisonPanel",
+      "part2Panel"
+    ].forEach(hidePanel);
+  }
 
   function clearBody(id) {
     $(id).replaceChildren();
@@ -487,7 +611,9 @@
     cell.textContent =
       value === null || value === undefined ? "" : String(value);
 
-    if (className) cell.className = className;
+    if (className) {
+      cell.className = className;
+    }
 
     row.appendChild(cell);
     return cell;
@@ -506,7 +632,9 @@
     element.textContent =
       value === null || value === undefined ? "" : String(value);
 
-    if (className) element.className = className;
+    if (className) {
+      element.className = className;
+    }
 
     parent.appendChild(element);
     return element;
@@ -521,20 +649,9 @@
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 
-  function getPreviousDate(dateString) {
-    const date = new Date(`${dateString}T00:00:00`);
-    date.setDate(date.getDate() - 1);
-
-    return [
-      date.getFullYear(),
-      String(date.getMonth() + 1).padStart(2, "0"),
-      String(date.getDate()).padStart(2, "0")
-    ].join("-");
-  }
-
-  // --------------------------------------------------
+  // ==========================================
   // CHUAN HOA DU LIEU WORKER
-  // --------------------------------------------------
+  // ==========================================
 
   function normalizeValue(value) {
     if (value === null || value === undefined) return "";
@@ -566,7 +683,9 @@
         const values = rawResults[prize] ?? day[prize];
 
         if (!Array.isArray(values)) {
-          throw new Error(`${label}: không tìm thấy mảng kết quả ${prize}.`);
+          throw new Error(
+            `${label}: không tìm thấy mảng kết quả ${prize}.`
+          );
         }
 
         normalized[prize] = values.map(normalizeValue);
@@ -578,7 +697,9 @@
     if (Array.isArray(rawResults)) {
       const grouped = {};
 
-      for (const prize of PRIZES) grouped[prize] = [];
+      for (const prize of PRIZES) {
+        grouped[prize] = [];
+      }
 
       for (const item of rawResults) {
         if (!item || typeof item !== "object") continue;
@@ -593,7 +714,9 @@
           item.number ?? item.value ?? item.result
         );
 
-        if (value) grouped[prize].push(value);
+        if (value) {
+          grouped[prize].push(value);
+        }
       }
 
       for (const prize of PRIZES) {
@@ -651,129 +774,198 @@
     return true;
   }
 
-  
-async function readWorker(date) {
-  const url =
-    `${WORKER_URL}/read?date=${encodeURIComponent(date)}`;
+  async function readWorker(date) {
+    const url =
+      `${WORKER_URL}/read?date=${encodeURIComponent(date)}`;
 
-  const response = await fetch(url, {
-    method: "GET",
-    headers: { "Accept": "application/json" },
-    cache: "no-store"
-  });
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+      cache: "no-store"
+    });
 
-  if (!response.ok) {
-    throw new Error(
-      `Worker trả về HTTP ${response.status}. Không thể đọc dữ liệu.`
+    if (!response.ok) {
+      throw new Error(
+        `Worker trả về HTTP ${response.status}. Không thể đọc dữ liệu.`
+      );
+    }
+
+    let payload;
+
+    try {
+      payload = await response.json();
+    } catch (error) {
+      throw new Error("Worker không trả về JSON hợp lệ.");
+    }
+
+    if (!payload || payload.ok !== true) {
+      throw new Error(
+        payload?.error ||
+        payload?.message ||
+        "Worker báo không đọc được dữ liệu nguồn."
+      );
+    }
+
+    if (!Array.isArray(payload.days) || payload.days.length !== 5) {
+      throw new Error(
+        "Worker chưa trả về đủ 5 ngày trong payload.days."
+      );
+    }
+
+    const days = payload.days.map((rawDay, index) => {
+      const labels = [
+        "Ngày N",
+        "Ngày N−1",
+        "Ngày N−2",
+        "Ngày N−3",
+        "Ngày N−4"
+      ];
+
+      return extractPrizeArrays(rawDay, labels[index]);
+    });
+
+    // Kiểm tra ngày liên tục từ N đến N-4.
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(`${date}T12:00:00Z`);
+      d.setUTCDate(d.getUTCDate() - i);
+
+      const expectedDate = [
+        d.getUTCFullYear(),
+        String(d.getUTCMonth() + 1).padStart(2, "0"),
+        String(d.getUTCDate()).padStart(2, "0")
+      ].join("-");
+
+      validateWorkerDay(
+        days[i],
+        `Ngày thứ ${i + 1}`,
+        expectedDate
+      );
+    }
+
+    return {
+      days,
+      sourceDay: days[0],
+      previousDay: days[1],
+      workerVersion: payload.version || "Không rõ",
+      source: payload.source || ""
+    };
+  }
+
+  // ==========================================
+  // CAC HAM HIEN THI TONG QUAN
+  // ==========================================
+
+  function createPairChips(pairs, type) {
+    const container = document.createElement("div");
+    container.className = "pair-list";
+
+    if (!Array.isArray(pairs) || pairs.length === 0) {
+      addText(container, "span", "Không có cặp đạt điều kiện.", "empty-list");
+      return container;
+    }
+
+    pairs.forEach(pair => {
+      const chip = document.createElement("span");
+      chip.className = "pair-chip" + (type ? " " + type : "");
+      chip.textContent = String(pair);
+      container.appendChild(chip);
+    });
+
+    return container;
+  }
+
+  function createSummaryCard(title, count, pairs, type) {
+    const card = document.createElement("div");
+    card.className = "summary-card";
+
+    const label = addText(card, "div", title, "summary-label");
+
+    const number = addText(
+      card,
+      "div",
+      count,
+      "summary-number"
     );
+
+    const list = createPairChips(pairs, type);
+    list.style.marginTop = "8px";
+
+    card.appendChild(list);
+    return card;
   }
 
-  let payload;
-
-  try {
-    payload = await response.json();
-  } catch (error) {
-    throw new Error("Worker không trả về JSON hợp lệ.");
-  }
-
-  if (!payload || payload.ok !== true) {
-    throw new Error(
-      payload?.error ||
-      payload?.message ||
-      "Worker báo không đọc được dữ liệu nguồn."
-    );
-  }
-
-  if (!Array.isArray(payload.days) || payload.days.length !== 5) {
-    throw new Error(
-      "Worker chưa trả về đủ 5 ngày trong payload.days."
-    );
-  }
-
-  // Chuẩn hóa đủ 5 ngày theo thứ tự N đến N-4.
-  const days = payload.days.map((rawDay, index) => {
-    const labels = [
-      "Ngày N",
-      "Ngày N−1",
-      "Ngày N−2",
-      "Ngày N−3",
-      "Ngày N−4"
-    ];
-
-    return extractPrizeArrays(rawDay, labels[index]);
-  });
-
-  // Kiểm tra ngày liên tục.
-  for (let i = 0; i < 5; i++) {
-    const expectedDate = date
-      ? (() => {
-          const d = new Date(`${date}T12:00:00Z`);
-          d.setUTCDate(d.getUTCDate() - i);
-
-          return [
-            d.getUTCFullYear(),
-            String(d.getUTCMonth() + 1).padStart(2, "0"),
-            String(d.getUTCDate()).padStart(2, "0")
-          ].join("-");
-        })()
-      : "";
-
-    validateWorkerDay(
-      days[i],
-      `Ngày thứ ${i + 1}`,
-      expectedDate
-    );
-  }
-
-  return {
-    days,
-    sourceDay: days[0],
-    previousDay: days[1],
-    workerVersion: payload.version || "Không rõ",
-    source: payload.source || ""
-  };
-}
-
-
-  // --------------------------------------------------
-  // HIEN THI TONG QUAN
-  // --------------------------------------------------
-
-  function renderSummary(report, workerInfo) {
-    const items = [
-      ["Phiên bản thuật toán", report.version],
-      ["Phiên bản Worker", workerInfo.workerVersion],
-      ["Ngày tìm mẫu N", formatDate(report.sourceDate)],
-      ["Ngày áp dụng N−1", formatDate(report.targetDate)],
-      ["Ngưỡng tối thiểu", report.minPositions + " vị trí"],
-      ["Tổng lượt tạo mẫu", report.sourceCreationCount],
-      ["Số mẫu đủ điều kiện", report.qualifiedPatternCount],
-      ["Lượt áp dụng tọa độ", report.appliedPositionCount],
-      ["Lượt áp dụng hợp lệ", report.validAppliedPositionCount],
-      ["Lượt vị trí khớp", report.matchedPositionCount],
-      ["Nhóm cặp mẫu khớp", report.matchedPairGroupCount]
-    ];
-
+  function renderSummary(report, reportPart2) {
     const container = $("summaryContent");
     container.replaceChildren();
 
-    for (const item of items) {
-      const card = document.createElement("div");
-      card.className = "metric";
+    // Phiên bản thuật toán.
+    const versionCard = document.createElement("div");
+    versionCard.className = "summary-card version-card";
 
-      addText(card, "div", item[0], "metric-label");
-      addText(card, "div", item[1], "metric-value");
+    addText(
+      versionCard,
+      "div",
+      "Phiên bản thuật toán",
+      "summary-label"
+    );
 
-      container.appendChild(card);
-    }
+    addText(
+      versionCard,
+      "div",
+      report.version || "Không rõ",
+      "summary-number"
+    );
 
-    $("algorithmNote").textContent = report.note || "";
+    container.appendChild(versionCard);
+
+    // Danh sách mẫu đủ điều kiện.
+    const qualifiedPairs = report.patterns.map(group => group.pair);
+
+    container.appendChild(
+      createSummaryCard(
+        "Số mẫu đủ điều kiện",
+        qualifiedPairs.length,
+        qualifiedPairs,
+        ""
+      )
+    );
+
+    // Danh sách nhóm cặp mẫu khớp.
+    const matchedPairs = report.matchedGroups.map(group => group.pair);
+
+    container.appendChild(
+      createSummaryCard(
+        "Nhóm cặp mẫu khớp",
+        matchedPairs.length,
+        matchedPairs,
+        "green"
+      )
+    );
+
+    // Danh sách cặp còn lại sau 4 giai đoạn.
+    const finalGroups = Array.isArray(reportPart2.finalGroups)
+      ? reportPart2.finalGroups
+      : [];
+
+    const finalPairs = finalGroups.map(group =>
+      group.canonical || group.pair
+    );
+
+    container.appendChild(
+      createSummaryCard(
+        "Cặp còn đạt sau 4 giai đoạn",
+        finalPairs.length,
+        finalPairs,
+        "final"
+      )
+    );
+
     showPanel("summaryPanel");
   }
 
-  // --------------------------------------------------
+  // ==========================================
   // A. MAU TIM TREN NGAY N
-  // --------------------------------------------------
+  // ==========================================
 
   function formatSourcePosition(position) {
     const left = position.left;
@@ -802,37 +994,64 @@ async function readWorker(date) {
       addCell(row, group.pair, "pair");
       addCell(row, group.count);
 
-      const detail = document.createElement("td");
-      detail.className = "detail";
+      const detailCell = document.createElement("td");
 
-      group.positions.forEach((position, positionIndex) => {
+      const details = document.createElement("details");
+      details.className = "source-details";
+
+      const summary = document.createElement("summary");
+      summary.textContent =
+        `Xem ${Array.isArray(group.positions) ? group.positions.length : 0} vị trí`;
+
+      details.appendChild(summary);
+
+      const positionList = document.createElement("div");
+      positionList.className = "source-position-list";
+
+      const positions = Array.isArray(group.positions)
+        ? group.positions
+        : [];
+
+      positions.forEach((position, positionIndex) => {
         addText(
-          detail,
+          positionList,
           "div",
           `${positionIndex + 1}. ${formatSourcePosition(position)}`,
-          "detail-line"
+          "source-position"
         );
       });
 
-      row.appendChild(detail);
+      if (positions.length === 0) {
+        addText(
+          positionList,
+          "div",
+          "Không có chi tiết vị trí.",
+          "empty-list"
+        );
+      }
+
+      details.appendChild(positionList);
+      detailCell.appendChild(details);
+      row.appendChild(detailCell);
+
       body.appendChild(row);
     });
 
     if (!report.patterns.length) {
       addRow(body, [
         "",
-        "Không có mẫu đạt ngưỡng 6 vị trí",
+        "Không có mẫu đạt điều kiện",
         "0",
-        "Không tìm thấy cặp đủ điều kiện."
+        ""
       ]);
     }
 
     showPanel("sourcePanel");
   }
 
-  // --------------------------------------------------
+  // ==========================================
   // B. AP DUNG TOA DO SANG NGAY N-1
-  // --------------------------------------------------
+  // ==========================================
 
   function formatAppliedPosition(item) {
     const left = item.appliedLeft;
@@ -865,24 +1084,40 @@ async function readWorker(date) {
       const row = document.createElement("tr");
 
       addCell(row, index + 1);
-      addCell(row, item.sourcePair || item.sourceCanonical, "pair");
-      addCell(row, item.appliedPair || "Không hợp lệ", "pair");
+      addCell(
+        row,
+        item.sourcePair || item.sourceCanonical,
+        "pair"
+      );
+      addCell(
+        row,
+        item.appliedPair || "Không hợp lệ",
+        "pair"
+      );
 
       const regionCell = document.createElement("td");
       regionCell.textContent = item.regionId || "";
 
       const tag = document.createElement("span");
       tag.className =
-        item.regionType === "red" ? "tag tag-red" : "tag tag-black";
+        item.regionType === "red"
+          ? "tag tag-red"
+          : "tag tag-black";
 
       tag.textContent =
-        item.regionType === "red" ? "VÙNG ĐỎ" : "VÙNG ĐEN";
+        item.regionType === "red"
+          ? "VÙNG ĐỎ"
+          : "VÙNG ĐEN";
 
       regionCell.appendChild(document.createTextNode(" "));
       regionCell.appendChild(tag);
       row.appendChild(regionCell);
 
-      addCell(row, formatAppliedPosition(item), "detail");
+      addCell(
+        row,
+        formatAppliedPosition(item),
+        "detail"
+      );
 
       addCell(
         row,
@@ -895,7 +1130,10 @@ async function readWorker(date) {
 
     if (!report.applied.length) {
       addRow(body, [
-        "", "", "", "",
+        "",
+        "",
+        "",
+        "",
         "Không có tọa độ được áp dụng.",
         ""
       ]);
@@ -904,104 +1142,40 @@ async function readWorker(date) {
     showPanel("targetPanel");
   }
 
-  // --------------------------------------------------
-  // C. NHOM THEO CAP MAU NGAY N
-  // --------------------------------------------------
-
-  function formatMatchedPairs(positions) {
-    return positions.map((item, index) => {
-      return `${index + 1}. ${item.appliedPair}`;
-    }).join("\n");
-  }
-
-  function formatMatchedResults(results) {
-    if (!Array.isArray(results) || !results.length) {
-      return "";
-    }
-
-    return results.map(result => {
-      return [
-        result.prize,
-        `số ${result.numberIndex + 1}`,
-        result.number,
-        `đuôi ${result.tail}`
-      ].join(" | ");
-    }).join("\n");
-  }
+  // ==========================================
+  // C. CAC CAP KHOP VOI KET QUA NGAY N
+  // ==========================================
 
   function renderComparison(report) {
     const body = $("matchedBody");
     clearBody("matchedBody");
 
-    report.matchedGroups.forEach((group, index) => {
+    report.matchedGroups.forEach(group => {
       const row = document.createElement("tr");
 
-      // 1. STT
-      addCell(row, index + 1);
-
-      // 2. Cap mau ngay N
       addCell(row, group.pair, "pair matched");
-
-      // 3. Tong vi tri mau ngay N
       addCell(row, group.totalPositions);
-
-      // 4. So cap da tao tren N-1
       addCell(row, group.appliedPositions);
-
-      // 5. So vi tri tao cap khop ket qua ngay N
       addCell(row, group.matchedPositions, "matched");
-
-      // 6. Cac cap tao tren N-1 khop
-      addCell(
-        row,
-        formatMatchedPairs(group.positions),
-        "detail"
-      );
-
-      // 7. Ket qua thuc te ngay N khop
-      addCell(
-        row,
-        formatMatchedResults(group.matchedResults),
-        "detail"
-      );
 
       body.appendChild(row);
     });
 
     if (!report.matchedGroups.length) {
       addRow(body, [
-        "",
         "Không có cặp mẫu khớp",
-        "",
-        "",
         "0",
-        "",
-        "Không có vị trí tạo cặp nào khớp với kết quả ngày N."
+        "0",
+        "0"
       ]);
     }
 
     showPanel("comparisonPanel");
   }
 
-  // --------------------------------------------------
-  // CHAY TOAN BO QUY TRINH
-  // --------------------------------------------------
-
-  // --------------------------------------------------
-  // PHAN 2 - HIEN THI CHUOI DOI CHIEU 5 NGAY
-  // --------------------------------------------------
-
-  
-
-function renderPart2(report) {
-  const stageBody = document.getElementById("part2StageBody");
-  const summaryBox = document.getElementById("part2Summary");
-  const finalBody = document.getElementById("part2FinalBody");
-
-  if (!stageBody || !summaryBox || !finalBody) {
-    console.error("Không tìm thấy khu vực hiển thị Phần 2.");
-    return;
-  }
+  // ==========================================
+  // PHAN 2 - CHI HIEN THI KET QUA SAU 4 GIAI DOAN
+  // ==========================================
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -1119,130 +1293,80 @@ function renderPart2(report) {
     `;
   }
 
-  // A. BẢNG QUÁ TRÌNH 4 GIAI ĐOẠN
+  function renderPart2(report) {
+    const finalBody = $("part2FinalBody");
+    clearBody("part2FinalBody");
 
-  const stages = Array.isArray(report.stages)
-    ? report.stages
-    : [];
+    const finalGroups = Array.isArray(report.finalGroups)
+      ? report.finalGroups
+      : [];
 
-  stageBody.innerHTML = stages.map(stage => `
-    <tr>
-      <td>${escapeHtml(stage.stage)}</td>
-      <td>${escapeHtml(stage.sourceDate)}</td>
-      <td>${escapeHtml(stage.targetDate)}</td>
-      <td>${escapeHtml(stage.inputPatternCount)}</td>
-      <td>${escapeHtml(stage.appliedPositionCount)}</td>
-      <td>${escapeHtml(stage.matchedPositionCount)}</td>
-      <td>${escapeHtml(stage.matchedPairGroupCount)}</td>
-    </tr>
-  `).join("");
+    if (finalGroups.length === 0) {
+      finalBody.innerHTML = `
+        <tr>
+          <td colspan="2">
+            Không có cặp nào còn vị trí khớp sau 4 giai đoạn.
+          </td>
+        </tr>
+      `;
 
-  // B. TỔNG HỢP KẾT QUẢ
+      showPanel("part2Panel");
+      return;
+    }
 
-  const summary = report.summary || {};
+    finalBody.innerHTML = finalGroups.map(group => {
+      const positions = Array.isArray(group.positions)
+        ? group.positions
+        : [];
 
-  summaryBox.innerHTML = `
-    <div><strong>Phiên bản:</strong> ${escapeHtml(report.version)}</div>
-    <div><strong>Ngày bắt đầu N:</strong> ${escapeHtml(report.sourceDate)}</div>
-    <div><strong>Chuỗi ngày:</strong> ${escapeHtml(
-      Array.isArray(report.dates) ? report.dates.join(" → ") : ""
-    )}</div>
+      const positionHtml = positions.length
+        ? positions.map((position, index) =>
+            renderPosition(position, index)
+          ).join("")
+        : "Không có tọa độ được lưu.";
 
-    <hr>
+      const count = Number(
+        group.matchedPositions ?? positions.length
+      );
 
-    <div><strong>Số mẫu ban đầu:</strong>
-      ${escapeHtml(summary.initialPatterns ?? 0)}
-    </div>
+      return `
+        <tr>
+          <td>
+            <strong class="pair">
+              ${escapeHtml(group.canonical || group.pair)}
+            </strong>
+          </td>
 
-    <div><strong>Số nhóm khớp giai đoạn 1:</strong>
-      ${escapeHtml(summary.stage1Groups ?? 0)}
-    </div>
+          <td>
+            <details class="part2-coordinate-details">
+              <summary title="Bấm để xem tọa độ còn khớp">
+                ${escapeHtml(count)} vị trí
+              </summary>
 
-    <div><strong>Số nhóm khớp giai đoạn 2:</strong>
-      ${escapeHtml(summary.stage2Groups ?? 0)}
-    </div>
+              <div class="part2-position-list">
+                ${positionHtml}
+              </div>
+            </details>
+          </td>
+        </tr>
+      `;
+    }).join("");
 
-    <div><strong>Số nhóm khớp giai đoạn 3:</strong>
-      ${escapeHtml(summary.stage3Groups ?? 0)}
-    </div>
-
-    <div><strong>Số nhóm khớp giai đoạn 4:</strong>
-      ${escapeHtml(summary.stage4Groups ?? 0)}
-    </div>
-
-    <hr>
-
-    <div><strong>Tổng cặp cuối cùng:</strong>
-      ${escapeHtml(summary.finalPairGroups ?? 0)}
-    </div>
-
-    <div><strong>Tổng vị trí còn khớp:</strong>
-      ${escapeHtml(summary.finalMatchedPositions ?? 0)}
-    </div>
-  `;
-
-  // C. DANH SÁCH CẶP CUỐI CÙNG
-
-  const finalGroups = Array.isArray(report.finalGroups)
-    ? report.finalGroups
-    : [];
-
-  if (finalGroups.length === 0) {
-    finalBody.innerHTML = `
-      <tr>
-        <td colspan="2">
-          Không có cặp nào còn vị trí khớp sau 4 giai đoạn.
-        </td>
-      </tr>
-    `;
-    return;
+    showPanel("part2Panel");
   }
 
- 
-finalBody.innerHTML = finalGroups.map(group => {
-  const positions = Array.isArray(group.positions)
-    ? group.positions
-    : [];
-
-  const positionHtml = positions.length
-    ? positions.map((position, index) =>
-        renderPosition(position, index)
-      ).join("")
-    : "Không có tọa độ được lưu.";
-
-  const count = Number(
-    group.matchedPositions ?? positions.length
-  );
-
-  return `
-    <tr>
-      <td>
-        <strong>${escapeHtml(group.canonical || group.pair)}</strong>
-      </td>
-
-      <td>
-        <details class="part2-coordinate-details">
-          <summary title="Bấm để xem tọa độ còn khớp">
-            <strong>${escapeHtml(count)}</strong>
-          </summary>
-
-          <div class="part2-position-list">
-            ${positionHtml}
-          </div>
-        </details>
-      </td>
-    </tr>
-  `;
-}).join("");
-  showPanel("part2Panel");
-}
-
+  // ==========================================
+  // CHAY TOAN BO QUY TRINH
+  // ==========================================
 
   async function runAnalysis() {
     const date = $("selectedDate").value;
 
     if (!date) {
-      setStatus("Vui lòng chọn ngày N trước khi chạy.", "warning");
+      setStatus(
+        "Vui lòng chọn ngày N trước khi chạy.",
+        "warning"
+      );
       return;
     }
 
@@ -1256,7 +1380,8 @@ finalBody.innerHTML = finalGroups.map(group => {
       hideResults();
 
       setStatus(
-        "Không tải được algorithm.js phiên bản 4.2.0 hoặc thiếu hàm analyzePart2().",
+        "Không tải được algorithm.js phiên bản 4.2.0 " +
+        "hoặc thiếu hàm analyzePart2().",
         "error"
       );
 
@@ -1273,7 +1398,6 @@ finalBody.innerHTML = finalGroups.map(group => {
       );
 
       const workerInfo = await readWorker(date);
-
       const days = workerInfo.days;
 
       setStatus(
@@ -1295,7 +1419,7 @@ finalBody.innerHTML = finalGroups.map(group => {
       );
 
       // ==================================
-      // PHAN 1 - GIU NGUYEN THUAT TOAN CU
+      // PHAN 1 - GIU NGUYEN THUAT TOAN
       // ==================================
 
       const report = algorithm.analyze(
@@ -1316,7 +1440,7 @@ finalBody.innerHTML = finalGroups.map(group => {
       }
 
       // ==================================
-      // PHAN 2 - CHUOI DOI CHIEU 5 NGAY
+      // PHAN 2 - GIU NGUYEN THUAT TOAN
       // ==================================
 
       setStatus(
@@ -1325,20 +1449,10 @@ finalBody.innerHTML = finalGroups.map(group => {
       );
 
       const reportPart2 = algorithm.analyzePart2(days, {
-  minSourcePositions: 1,
-  minMatchedPositions: 1
-        }
-      );
-      console.log(
-  "TOA DO THUC TE:",
-  JSON.stringify(
-    reportPart2.finalGroups[0]?.positions,
-    null,
-    2
-  )
-);
-console.log("CHI TIẾT FINAL GROUPS:", reportPart2.finalGroups);
-console.log("TỌA ĐỘ CẶP ĐẦU TIÊN:", reportPart2.finalGroups[0]?.positions);
+        minSourcePositions: 1,
+        minMatchedPositions: 1
+      });
+
       if (
         !reportPart2 ||
         !Array.isArray(reportPart2.stages) ||
@@ -1354,16 +1468,10 @@ console.log("TỌA ĐỘ CẶP ĐẦU TIÊN:", reportPart2.finalGroups[0]?.posit
       // HIEN THI KET QUA
       // ==================================
 
-      // Phần 1.
-      renderSummary(report, workerInfo);
+      renderSummary(report, reportPart2);
       renderSource(report);
       renderApplied(report);
       renderComparison(report);
-
-      // Phần 2.
-      console.log("PART2 finalGroups:", reportPart2.finalGroups);
-console.log("PART2 stages:", reportPart2.stages);
-console.log("PART2 summary:", reportPart2.summary);
       renderPart2(reportPart2);
 
       setStatus(
@@ -1375,6 +1483,7 @@ console.log("PART2 summary:", reportPart2.summary);
         "success"
       );
 
+      // Thông tin phục vụ kiểm tra khi cần.
       console.log("XSMB Worker input:", workerInfo);
       console.log("XSMB Part 1 report:", report);
       console.log("XSMB Part 2 report:", reportPart2);
@@ -1399,7 +1508,7 @@ console.log("PART2 summary:", reportPart2.summary);
 
   $("runButton").addEventListener("click", runAnalysis);
 
-  // Mac dinh ngay hien tai theo gio may nguoi dung.
+  // Ngày mặc định theo giờ máy người dùng.
   function setDefaultDate() {
     const now = new Date();
 
